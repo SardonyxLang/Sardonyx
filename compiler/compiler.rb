@@ -30,6 +30,8 @@ module Compiler
                 end
             when :number
                 bc += "\x21\x13#{node.value}\x18"
+            when :float
+                bc += "\x21\x15#{node.value}\x18"
             when :string
                 bc += "\x21\x14#{node.value}\x18"
             when :call

@@ -1,3 +1,14 @@
-for i in [0, 1, 2] {
-    __rb_call("pp", [i])
+object X(y) {
+    fn __add(z) {
+        y + z
+    }
+
+    fn __as_string() {
+        y.__as_string()
+    }
 }
+
+obj = new X(5)
+n = obj + 1
+__rb_call("puts", [n])
+__rb_call("puts", [obj.__as_string()])

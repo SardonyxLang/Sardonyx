@@ -147,6 +147,12 @@ class Str < DataType
             end)),
             "__as_code_string" => (NativeFnInternal.new (Proc.new do
                 as_code_string
+            end)),
+            "__add" => (NativeFnInternal.new (Proc.new do |other|
+                add other
+            end)),
+            "__mul" => (NativeFnInternal.new (Proc.new do |other|
+                mul other
             end))
         }
     end
@@ -158,6 +164,14 @@ class Str < DataType
     def as_code_string
         (Str.new "\"#{@internal}\"")
     end
+
+    def add(other)
+        Str.new @internal + other.internal
+    end
+
+    def mul(other)
+        Str.new @internal * other.internal
+    end
 end
 
 class Num < DataType
@@ -166,17 +180,66 @@ class Num < DataType
             @internal = val
         end
         @fields = {
-            "__as_string" => (NativeFnInternal.new (Proc.new do 
+            "__as_string" => (NativeFnInternal.new (Proc.new do
                 as_string
             end)),
             "__as_code_string" => (NativeFnInternal.new (Proc.new do
                 as_string
+            end)),
+            "__as_bool" => (NativeFnInternal.new (Proc.new do
+                as_bool
+            end)),
+            "__add" => (NativeFnInternal.new (Proc.new do |other|
+                add other
+            end)),
+            "__sub" => (NativeFnInternal.new (Proc.new do |other|
+                sub other
+            end)),
+            "__mul" => (NativeFnInternal.new (Proc.new do |other|
+                mul other
+            end)),
+            "__div" => (NativeFnInternal.new (Proc.new do |other|
+                div other
+            end)),
+            "__mod" => (NativeFnInternal.new (Proc.new do |other|
+                mod other
+            end)),
+            "__pow" => (NativeFnInternal.new (Proc.new do |other|
+                pow other
             end))
         }
     end
 
     def as_string
-        (Str.new @internal.to_s)
+        Str.new @internal.to_s
+    end
+
+    def as_bool
+        Bool.new true
+    end
+
+    def add(other)
+        Num.new @internal + other.internal
+    end
+
+    def sub(other)
+        Num.new @internal - other.internal
+    end
+
+    def mul(other)
+        Num.new @internal * other.internal
+    end
+
+    def div(other)
+        Num.new @internal / other.internal
+    end
+
+    def mod(other)
+        Num.new @internal % other.internal
+    end
+
+    def pow(other)
+        Num.new @internal ** other.internal
     end
 end
 
@@ -207,6 +270,12 @@ class List < DataType
             end)),
             "__iter" => (NativeFnInternal.new (Proc.new do 
                 iter
+            end)),
+            "__add" => (NativeFnInternal.new (Proc.new do |other|
+                add other
+            end)),
+            "__mul" => (NativeFnInternal.new (Proc.new do |other|
+                mul other
             end))
         }
     end
@@ -244,6 +313,14 @@ class List < DataType
             return Variable.new Nil.new
         end
     end
+    
+    def add(other)
+        return List.new [*@internal, other]
+    end
+
+    def mul(other)
+        return List.new @internal * other.internal
+    end
 end
 
 def get_type(x)
@@ -260,6 +337,8 @@ def get_type(x)
         :list
     when Nil
         :nil
+    when Num
+        :num
     when Obj
         :object
     end
@@ -326,5 +405,6 @@ end
 class InstantiatedObj < DataType
     def initialize(scope)
         @internal = scope
+        @fields = scope.variables
     end
 end

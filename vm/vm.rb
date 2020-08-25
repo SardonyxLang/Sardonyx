@@ -18,61 +18,66 @@ def codify(val)
     end
 end
 
-def truthy(val)
-    if val.value.fields["__as_bool"]
-        (val.value.fields["__as_bool"].call).internal
-    else
-        true
-    end
-end
-
-def call(val, *args)
-    if val.respond_to? :value and val.value.respond_to? :fields
-        return val.value.fields["__call"].call *args
-    elsif val.respond_to? :fields
-        return val.fields["__call"].call *args
-    else
-        return (to_var val).value.call *args
-    end
-end
-
-def callable(val)
-    if val.respond_to? :value and val.value.respond_to? :fields
-        if val.value.fields["__call"] and val.value.fields["__arity"]
-            return true
-        end
-        return false
-    elsif val.respond_to? :fields
-        if val.fields["__call"] and val.fields["__arity"]
-            return true
-        end
-        return false
-    else
-        return true
-    end
-end
-
-def arity(val)
-    if val.respond_to? :value and val.value.respond_to? :fields
-        if val.value.fields["__call"] and val.value.fields["__arity"]
-            return val.value.fields["__arity"]
-        end
-    else
-        return (to_var val).value.arity
-    end
-end
-
-def to_var(val)
-    case val
-    when Variable
-        return val
-    else
-        return Variable.new val
-    end
-end
-
 class VM
     attr_accessor :bc_io
+    
+    def truthy(val)
+        if val.value.fields["__as_bool"]
+            (val.value.fields["__as_bool"].call).internal
+        else
+            true
+        end
+    end
+    
+    def call(val, *args)
+        if val.respond_to? :value and val.value.respond_to? :fields
+            case val.value
+            when Function
+                return val.value.fields["__call"].call args.map { |x| to_var x }, val.scope
+            else
+                return val.value.fields["__call"].call *args
+            end
+        elsif val.respond_to? :fields
+            return val.fields["__call"].call *args
+        else
+            return (to_var val).value.call *args
+        end
+    end
+    
+    def callable(val)
+        if val.respond_to? :value and val.value.respond_to? :fields
+            if val.value.fields["__call"] and val.value.fields["__arity"]
+                return true
+            end
+            return false
+        elsif val.respond_to? :fields
+            if val.fields["__call"] and val.fields["__arity"]
+                return true
+            end
+            return false
+        else
+            return true
+        end
+    end
+    
+    def arity(val)
+        if val.respond_to? :value and val.value.respond_to? :fields
+            if val.value.fields["__call"] and val.value.fields["__arity"]
+                return val.value.fields["__arity"]
+            end
+        else
+            return (to_var val).value.arity
+        end
+    end
+    
+    def to_var(val)
+        case val
+        when Variable
+            return val
+        else
+            return Variable.new val, (get_type val), @global
+        end
+    end
 
     def initialize(bc_io) 
         @bc_io = bc_io 
@@ -80,7 +85,7 @@ class VM
         @global.add_fn "__rb_call", (Variable.new (NativeFn.new 2, (Proc.new do |name, args|
             args = (codify args)[1..-2]
             eval "#{name.value.internal}(#{args})"
-        end)), @global)
+        end)), :fn, @global)
         @stack = []
         @byte_pos = 0
     end
@@ -225,6 +230,9 @@ class VM
                 when :int
                     val = get_string
                     push_to_stack Variable.new (Int.new val.to_i), :int, @global
+                when :num
+                    val = get_string
+                    push_to_stack Variable.new (Num.new val.to_f), :num, @global
                 when :str
                     val = get_string
                     push_to_stack Variable.new (Str.new val), :str, @global
@@ -243,7 +251,7 @@ class VM
                 b, a = pop_from_stack, pop_from_stack
                 if a.value.fields["__add"]
                     res = (call a.value.fields["__add"], b.value)
-                    push_to_stack (Variable.new res, (get_type res), @global) 
+                    push_to_stack (to_var res)
                 else
                     error "Cannot add to #{a.type}"
                 end
@@ -363,7 +371,7 @@ class VM
                     f = Proc.new do |args, scope|
                         call val.value.fields["__new"], args, scope
                     end
-                    ret = Variable.new (InstantiatedObj.new f.call args, @global), @global
+                    ret = Variable.new (InstantiatedObj.new f.call args, @global), :instobj, @global
                     if ret
                         push_to_stack ret
                     end

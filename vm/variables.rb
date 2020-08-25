@@ -2,7 +2,7 @@ class Variable
     @mut = false
     attr_reader :type, :value, :scope
 
-    def initialize(val=nil, type=nil, scope=nil)
+    def initialize(val, type, scope)
         @value = val
         @type = type
         @scope = scope

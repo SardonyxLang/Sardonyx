@@ -13,7 +13,8 @@ module Parser
             /\A(<|>|<=|>=|==)/ => :op,
             /\A(\+|-|\*|\/|%)?=/ => :eq,
             /\A(\+|-|\*|\/|%)/ => :op,
-            /\A-?[0-9]+(\.[0-9]+)?/ => :number,
+            /\A-?[0-9]+/ => :number,
+            /\A-?[0-9]+\.[0-9]+/ => :float,
             /\A"([^"]|\\")*"/ => :string,
             /\Anil/ => :nil,
             /\A\(/ => :lpar,
@@ -96,6 +97,14 @@ module Parser
             end
         end
 
+        def self.parse_float(tokens)
+            if self.expect tokens, :float
+                [ (Node.new :float, tokens[0][0], []), 1 ]
+            else
+                nil
+            end
+        end
+
         def self.parse_string(tokens)
             if self.expect tokens, :string
                 [ (Node.new :string, tokens[0][0][1..-2], []), 1 ]
@@ -162,7 +171,7 @@ module Parser
         end
 
         def self.parse_literal(tokens)
-            (self.parse_block tokens) || (self.parse_name tokens) || (self.parse_number tokens) || (self.parse_list tokens) || (self.parse_string tokens) || (self.parse_nil tokens)
+            self.parse_float(tokens) || (self.parse_block tokens) || (self.parse_name tokens) || (self.parse_number tokens) || (self.parse_list tokens) || (self.parse_string tokens) || (self.parse_nil tokens)
         end
 
         def self.parse_call(tokens)

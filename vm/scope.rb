@@ -34,7 +34,7 @@ class GLOBAL_SCOPE
                 fields = {}
                 if val.value.respond_to? :fields
                     val.value.fields.each do |k, v|
-                        fields[k] = Variable.new v
+                        fields[k] = Variable.new v, (get_type v), self
                     end
                     scope = GLOBAL_SCOPE.new fields
                 end
