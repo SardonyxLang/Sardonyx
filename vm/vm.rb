@@ -26,6 +26,51 @@ def truthy(val)
     end
 end
 
+def call(val, *args)
+    if val.respond_to? :value and val.value.respond_to? :fields
+        return val.value.fields["__call"].call *args
+    elsif val.respond_to? :fields
+        return val.fields["__call"].call *args
+    else
+        return (to_var val).value.call *args
+    end
+end
+
+def callable(val)
+    if val.respond_to? :value and val.value.respond_to? :fields
+        if val.value.fields["__call"] and val.value.fields["__arity"]
+            return true
+        end
+        return false
+    elsif val.respond_to? :fields
+        if val.fields["__call"] and val.fields["__arity"]
+            return true
+        end
+        return false
+    else
+        return true
+    end
+end
+
+def arity(val)
+    if val.respond_to? :value and val.value.respond_to? :fields
+        if val.value.fields["__call"] and val.value.fields["__arity"]
+            return val.value.fields["__arity"]
+        end
+    else
+        return (to_var val).value.arity
+    end
+end
+
+def to_var(val)
+    case val
+    when Variable
+        return val
+    else
+        return Variable.new val
+    end
+end
+
 class VM
     attr_accessor :bc_io
 
@@ -120,7 +165,7 @@ class VM
     end
 
     def push_to_stack(to_push)
-        @stack.push to_push
+        @stack.push to_var to_push
     end
 
     def pop_from_stack
@@ -197,7 +242,7 @@ class VM
             when :add
                 b, a = pop_from_stack, pop_from_stack
                 if a.value.fields["__add"]
-                    res = (a.value.fields["__add"].call b.value)
+                    res = (call a.value.fields["__add"], b.value)
                     push_to_stack (Variable.new res, (get_type res), @global) 
                 else
                     error "Cannot add to #{a.type}"
@@ -205,7 +250,7 @@ class VM
             when :sub
                 b, a = pop_from_stack, pop_from_stack
                 if a.value.fields["__sub"]
-                    res = (a.value.fields["__sub"].call b.value)
+                    res = (call a.value.fields["__sub"], b.value)
                     push_to_stack (Variable.new res, (get_type res), @global) 
                 else
                     error "Cannot subtract from #{a.type}"
@@ -213,7 +258,7 @@ class VM
             when :mul
                 b, a = pop_from_stack, pop_from_stack
                 if a.value.fields["__mul"]
-                    res = (a.value.fields["__mul"].call b.value)
+                    res = (call a.value.fields["__mul"], b.value)
                     push_to_stack (Variable.new res, (get_type res), @global) 
                 else
                     error "Cannot multiply #{a.type}"
@@ -221,7 +266,7 @@ class VM
             when :div
                 b, a = pop_from_stack, pop_from_stack
                 if a.value.fields["__div"]
-                    res = (a.value.fields["__div"].call b.value)
+                    res = (call a.value.fields["__div"], b.value)
                     push_to_stack (Variable.new res, (get_type res), @global) 
                 else
                     error "Cannot divide #{a.type}"
@@ -229,7 +274,7 @@ class VM
             when :mod
                 b, a = pop_from_stack, pop_from_stack
                 if a.value.fields["__mod"]
-                    res = (a.value.fields["__mod"].call b.value)
+                    res = (call a.value.fields["__mod"], b.value)
                     push_to_stack (Variable.new res, (get_type res), @global) 
                 else
                     error "Cannot modulo #{a.type}"
@@ -237,7 +282,7 @@ class VM
             when :pow
                 b, a = pop_from_stack, pop_from_stack
                 if a.value.fields["__pow"]
-                    res = (a.value.fields["__pow"].call b.value)
+                    res = (call a.value.fields["__pow"], b.value)
                     push_to_stack (Variable.new res, (get_type res), @global) 
                 else
                     error "Cannot exponentiate #{a.type}"
@@ -268,20 +313,20 @@ class VM
             when :reset
                 val = pop_from_stack
                 if val.value.fields["__reset"]
-                    val.value.fields["__reset"].call
+                    call val.value.fields["__reset"]
                     push_to_stack val
                 end
             when :iter
                 val = pop_from_stack
                 if val.value.fields["__iter"]
-                    res = val.value.fields["__iter"].call
+                    res = call val.value.fields["__iter"]
                     push_to_stack res
                 end
             when :call
                 val = pop_from_stack
-                if val.value.fields["__call"] and val.value.fields["__arity"]
+                if callable val
                     args = []
-                    val.value.fields["__arity"].internal.times do
+                    (arity val).internal.times do
                         this = pop_from_stack
                         unless this
                             error "Not enough arguments: expected #{val.value.fields["__arity"].internal}, got #{args.size}"
@@ -289,7 +334,7 @@ class VM
                         args << this
                     end
                     f = Proc.new do |args, scope|
-                        val.value.fields["__call"].call args, scope
+                        call val, args, scope
                     end
                     scope = nil
                     begin
@@ -316,7 +361,7 @@ class VM
                         args << this
                     end
                     f = Proc.new do |args, scope|
-                        val.value.fields["__new"].call args, scope
+                        call val.value.fields["__new"], args, scope
                     end
                     ret = Variable.new (InstantiatedObj.new f.call args, @global), @global
                     if ret

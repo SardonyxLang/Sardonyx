@@ -23,7 +23,7 @@ module Parser
             /\A\{/ => :lbrace,
             /\A\}/ => :rbrace,
             /\A,/ => :comma,
-            /\A[A-Za-z_][A-Za-z_0-9]*([:.][A-Za-z_][A-Za-z_0-9]*)*/ => :name
+            /\A[A-Za-z_][A-Za-z0-9_]*([:.][A-Za-z_][A-Za-z0-9_]*)*/ => :name
         }
 
         def self.lex(code)

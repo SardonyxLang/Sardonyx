@@ -1,1 +1,0 @@
-__rb_call("puts", ["hi"])

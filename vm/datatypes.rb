@@ -1,5 +1,6 @@
 require "./vm/vm"
 require "./vm/variables"
+require "stringio"
 
 class DataType 
     attr_reader :internal
@@ -13,12 +14,21 @@ class DataType
 end
 
 class NativeFnInternal
+    attr_reader :arity
+
     def initialize(val=nil)
         @internal = val
+        @arity = IntInternal.new val.arity
     end
 
     def call(*args)
         @internal.call *args
+    end
+end
+
+class IntInternal < DataType
+    def initialize(val)
+        @internal = val
     end
 end
 
@@ -43,10 +53,10 @@ class Bool < DataType
             @internal = false
         end
         @fields = {
-            "__as_string" => (NativeFnInternal.new (Proc.new do
+            "__as_string" => (NativeFn.new 0, (Proc.new do
                 as_string
             end)),
-            "__as_code_string" => (NativeFnInternal.new (Proc.new do
+            "__as_code_string" => (NativeFn.new 0, (Proc.new do
                 as_string
             end))
         }
@@ -98,7 +108,7 @@ class Int < DataType
     end
 
     def as_bool
-        Bool.new @internal > 0
+        Bool.new true
     end
 
     def add(other)
@@ -250,7 +260,7 @@ def get_type(x)
         :list
     when Nil
         :nil
-    when Object
+    when Obj
         :object
     end
 end

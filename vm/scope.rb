@@ -6,8 +6,8 @@ class GLOBAL_SCOPE
         exit 1
     end
 
-    def initialize
-        @variables = {}
+    def initialize(variables={})
+        @variables = variables
     end
 
     def add_var(var_name, var_class)
@@ -30,6 +30,14 @@ class GLOBAL_SCOPE
             case val.value
             when InstantiatedObj
                 scope = val.value.internal
+            else
+                fields = {}
+                if val.value.respond_to? :fields
+                    val.value.fields.each do |k, v|
+                        fields[k] = Variable.new v
+                    end
+                    scope = GLOBAL_SCOPE.new fields
+                end
             end
         end
         return val
