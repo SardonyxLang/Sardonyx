@@ -35,12 +35,12 @@ class VM
             when Function
                 return val.value.fields["__call"].call args.map { |x| to_var x }, val.scope
             else
-                return val.value.fields["__call"].call *args
+                return val.value.fields["__call"].call args, val.scope
             end
         elsif val.respond_to? :fields
             return val.fields["__call"].call *args
         else
-            return (to_var val).value.call *args
+            return (to_var val).value.call args
         end
     end
     
@@ -356,16 +356,13 @@ class VM
                         end
                         args << this
                     end
-                    f = Proc.new do |args, scope|
-                        call val, args, scope
-                    end
                     scope = nil
                     begin
                         scope = val.scope
                     rescue
                         scope = @global
                     end
-                    ret = f.call args, scope
+                    ret = call val, *args
                     if ret
                         push_to_stack ret
                     end

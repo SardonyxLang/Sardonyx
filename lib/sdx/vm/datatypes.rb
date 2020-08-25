@@ -36,7 +36,7 @@ class NativeFn < DataType
     def initialize(arity, val)
         @internal = val
         @fields = {
-            "__call" => (NativeFnInternal.new (Proc.new do |args|
+            "__call" => (NativeFnInternal.new (lambda do |args, scope|
                 args.reverse!
                 @internal.call *args
             end)),
@@ -358,7 +358,7 @@ class Function < DataType
         @internal = body
 
         @fields = {
-            "__call" => (NativeFnInternal.new (Proc.new do |args, scope|
+            "__call" => (NativeFnInternal.new (lambda do |args, scope|
                 call args, scope
             end)),
             "__arity" => (Int.new args.size)
