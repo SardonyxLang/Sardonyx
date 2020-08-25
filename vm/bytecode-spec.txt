@@ -1,0 +1,47 @@
+0x01     make          1
+0x02     call          2
+0x03     return        3 
+0x04     set           4
+0x05     mut           5
+0x06     exec          6
+ 
+0x07     ARGS          7
+0x08     ARGSEND       8
+0x0e     BLK           14
+0x0f     BLKEND        15
+  
+0x010    var           16
+0x011    dst           17
+
+0x012    bool          18
+0x013    int           19
+0x014    str           20
+0x015    num           21
+0x02c    list     *     44
+0x2f     nil            47
+
+0x016    ENDPRG        22
+0x017    fn            23
+0x30     object         48
+
+0x018    STREND        24
+0x019    OUT           25
+0x01a    OUTSTR        26  
+
+0x020    get   <Space> 32
+0x021    const    !    33
+0x022    pop      "    34
+
+0x023    add      #    35
+0x024    sub           36
+0x025    mul           37
+0x026    div           38
+0x027    mod           39
+0x028    pow           40
+
+0x029    jmpi    )     41
+0x2a     jmp           42
+
+0x2d     reset   -     45
+0x2e     iter    .     46
+0x31     new           49
