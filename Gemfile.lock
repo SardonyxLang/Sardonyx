@@ -1,0 +1,12 @@
+GEM
+  specs:
+    stringio (0.1.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  stringio
+
+BUNDLED WITH
+   2.1.4

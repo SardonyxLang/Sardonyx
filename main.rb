@@ -2,6 +2,7 @@
 require "./compiler/parser"
 require "./compiler/compiler"
 require "./vm/vm"
+require "stringio"
 
 if ARGV.size == 1
     path = [(File.expand_path File.dirname ARGV[0]), *(ENV.fetch("SDX_PATH", "").split ":")]
@@ -25,5 +26,7 @@ else
         vm.bc_io = StringIO.new bc
         vm.byte_pos = 0
         vm.interpret
+        val = vm.stack[-1]
+        puts stringify val
     end
 end
