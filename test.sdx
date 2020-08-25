@@ -1,8 +1,1 @@
-object X(y, z) {
-    fn output(add) {
-        __rb_call("puts", [y + add, z + add])
-    }
-}
-
-obj = new X(5, 6)
-obj.output(7)
+require "test2"

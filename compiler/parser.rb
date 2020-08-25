@@ -9,6 +9,7 @@ module Parser
             /\Afn/ => :fn,
             /\Aobject/ => :object,
             /\Anew/ => :new,
+            /\Arequire/ => :require,
             /\A(<|>|<=|>=|==)/ => :op,
             /\A(\+|-|\*|\/|%)?=/ => :eq,
             /\A(\+|-|\*|\/|%)/ => :op,
@@ -460,17 +461,46 @@ module Parser
             total += part
             return [ (Node.new :object, name, [args, body]), total ]
         end
+
+        def self.parse_require(tokens)
+            unless self.expect tokens, :require
+                return nil
+            end
+            tokens = tokens[1..tokens.size]
+            unless self.expect tokens, :string
+                return nil
+            end
+            return [ (Node.new :require, tokens[0][0][1..-2], []), 2 ]
+        end
             
         def self.parse_expr(tokens)
-            (self.parse_new tokens) || (self.parse_object tokens) || (self.parse_fn tokens) || (self.parse_assign tokens) || (self.parse_op tokens)  || (self.parse_call tokens) || (self.parse_literal tokens) || (self.parse_if tokens) || (self.parse_while tokens) || (self.parse_for tokens)
+            (self.parse_require tokens) || (self.parse_new tokens) || (self.parse_object tokens) || (self.parse_fn tokens) || (self.parse_assign tokens) || (self.parse_op tokens)  || (self.parse_call tokens) || (self.parse_literal tokens) || (self.parse_if tokens) || (self.parse_while tokens) || (self.parse_for tokens)
         end
 
-        def self.parse(tokens)
+        def self.parse(tokens, path)
             parsed = []
             while tokens.size > 0
                 e = self.parse_expr tokens
                 if e
-                    parsed << e[0]
+                    if e[0].nodetype == :require
+                        code = nil
+                        path.each do |search|
+                            begin
+                                code = File.read "#{File.join(search, e[0].value)}.sdx"
+                            rescue
+                                nil
+                            end
+                        end
+                        unless code
+                            puts "Cannot find file #{e[0].value}.sdx anywhere in path"
+                            Kernel.exit 1
+                        end
+                        lexed = Lexer.lex code
+                        ast = self.parse lexed, path
+                        parsed.concat ast
+                    else
+                        parsed << e[0]
+                    end
                     tokens = tokens[e[1]..tokens.size]
                 else
                     puts "Syntax error at token ", tokens[0][1]
