@@ -51,7 +51,7 @@ class VM
         when String
             to_var (Str.new val)
         when Float
-            to_var (Str.new val)
+            to_var (Float.new val)
         when Array
             to_var (List.new val.map { |v| from_rb v })
         when Nil

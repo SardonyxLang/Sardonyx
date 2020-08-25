@@ -162,7 +162,7 @@ class Str < DataType
     end
 
     def as_code_string
-        (Str.new "\"#{@internal}\"")
+        (Str.new @internal.dump)
     end
 
     def add(other)
