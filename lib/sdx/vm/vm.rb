@@ -43,6 +43,21 @@ class VM
             return (to_var val).value.call args
         end
     end
+
+    def from_rb(val)
+        case val
+        when Integer
+            to_var (Int.new val)
+        when String
+            to_var (Str.new val)
+        when Float
+            to_var (Str.new val)
+        when Array
+            to_var (List.new val.map { |v| from_rb v })
+        when Nil
+            to_var (Nil_.new)
+        end
+    end
     
     def callable(val)
         if val.respond_to? :value and val.value.respond_to? :fields
@@ -84,7 +99,7 @@ class VM
         @global = GLOBAL_SCOPE.new
         @global.add_fn "__rb_call", (Variable.new (NativeFn.new 2, (Proc.new do |name, args|
             args = (codify args)[1..-2]
-            eval "#{name.value.internal}(#{args})"
+            from_rb eval "#{name.value.internal}(#{args})"
         end)), :fn, @global)
         @stack = []
         @byte_pos = 0
