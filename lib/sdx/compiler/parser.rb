@@ -14,7 +14,7 @@ module Parser
             /\A-?[0-9]+\.[0-9]+/ => :float,
             /\A-?[0-9]+/ => :number,
             /\A(\+|-)/ => :l1op,
-            /\A(\/|\*|%)/ => :l2op,
+            /\A(\/|\*|%|\^)/ => :l2op,
             /\A(<|>|<=|>=|==|!=)/ => :l1op,
             /\A(\+|-|\*|\/|%)?=/ => :eq,
             /\A"([^"]|\\")*"/ => :string,
@@ -225,14 +225,15 @@ module Parser
                     total += part
                     tokens = tokens[part..tokens.size]
                     args << arg
-                    total += 1
                     if self.expect tokens, :rpar
                         tokens = tokens[1..tokens.size]
+                        total += 1
                         break
                     end
                     unless (self.expect tokens, :comma)
                         return nil
                     end
+                    total += 1
                     tokens = tokens[1..tokens.size]
                 end
                 return [ (Node.new :call, callee, args), total ]
@@ -360,12 +361,26 @@ module Parser
             return [ (Node.new :for, e, [name, block]), total ]
         end
 
+
+        def self.parse_factor(tokens)
+            (self.parse_call tokens) || 
+            (self.parse_require tokens) || 
+            (self.parse_new tokens) || 
+            (self.parse_object tokens) || 
+            (self.parse_fn tokens) || 
+            (self.parse_assign tokens) || 
+            (self.parse_literal tokens) || 
+            (self.parse_if tokens) || 
+            (self.parse_while tokens) || 
+            (self.parse_for tokens)
+        end
+
         def self.parse_term(tokens)
             total = 0
-            unless self.parse_literal tokens
+            unless self.parse_factor tokens
                 return nil
             end
-            lhs, part = self.parse_literal tokens
+            lhs, part = self.parse_factor tokens
             total += part
             tokens = tokens[part..tokens.size]
             unless self.expect tokens, :l2op
@@ -374,12 +389,27 @@ module Parser
             op = tokens[0][0]
             total += 1
             tokens = tokens[1..tokens.size]
-            unless self.parse_literal tokens
+            unless self.parse_factor tokens
                 return nil
             end
-            rhs, part = self.parse_literal tokens
+            rhs, part = self.parse_factor tokens
             total += part
-            return [ (Node.new :op, op, [lhs, rhs]), total]
+            tokens = tokens[part..tokens.size]
+            out = (Node.new :op, op, [lhs])
+            while self.expect tokens, :l2op
+                op = tokens[0][0]
+                total += 1
+                tokens = tokens[1..tokens.size]
+                unless self.parse_term tokens
+                    return nil
+                end
+                rhs2, part = self.parse_term tokens
+                total += part
+                tokens = tokens[part..tokens.size]
+                rhs = Node.new :op, op, [rhs, rhs2]
+            end
+            out.children << rhs
+            return [out, total]
         end
 
         def self.parse_op(tokens)
@@ -401,7 +431,22 @@ module Parser
             end
             rhs, part = self.parse_term tokens
             total += part
-            return [ (Node.new :op, op, [lhs, rhs]), total]
+            tokens = tokens[part..tokens.size]
+            out = (Node.new :op, op, [lhs])
+            while self.expect tokens, :l1op
+                op = tokens[0][0]
+                total += 1
+                tokens = tokens[1..tokens.size]
+                unless self.parse_term tokens
+                    return nil
+                end
+                rhs2, part = self.parse_term tokens
+                total += part
+                tokens = tokens[part..tokens.size]
+                rhs = Node.new :op, op, [rhs, rhs2]
+            end
+            out.children << rhs
+            return [out, total]
         end
 
         def self.parse_assign(tokens)
@@ -535,7 +580,17 @@ module Parser
         end
             
         def self.parse_expr(tokens)
-            (self.parse_require tokens) || (self.parse_new tokens) || (self.parse_object tokens) || (self.parse_fn tokens) || (self.parse_assign tokens) || (self.parse_op tokens)  || (self.parse_term tokens) || (self.parse_call tokens) || (self.parse_literal tokens) || (self.parse_if tokens) || (self.parse_while tokens) || (self.parse_for tokens)
+            (self.parse_op tokens)  || 
+            (self.parse_call tokens) || 
+            (self.parse_require tokens) || 
+            (self.parse_new tokens) || 
+            (self.parse_object tokens) || 
+            (self.parse_fn tokens) || 
+            (self.parse_assign tokens) || 
+            (self.parse_literal tokens) || 
+            (self.parse_if tokens) || 
+            (self.parse_while tokens) || 
+            (self.parse_for tokens)
         end
 
         def self.parse(tokens, path)

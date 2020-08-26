@@ -165,7 +165,8 @@ class VM
             0x36 => :lt,
             0x37 => :gt,
             0x38 => :le,
-            0x39 => :ge
+            0x39 => :ge,
+            0x28 => :pow,
         }
         bytes = []
         begin
