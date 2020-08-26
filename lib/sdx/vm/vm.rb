@@ -1,6 +1,6 @@
-require './lib/sdx/vm/variables'
-require './lib/sdx/vm/datatypes'
-require './lib/sdx/vm/scope'
+require 'sdx/vm/variables'
+require 'sdx/vm/datatypes'
+require 'sdx/vm/scope'
 
 def codify(val)
     if val.value.fields["__as_code_string"]
