@@ -29,7 +29,7 @@ else
         val = vm.stack[-1]
         vm.clear
         if val
-            puts stringify val
+            puts vm.stringify val
         end
     end
 end

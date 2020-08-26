@@ -72,6 +72,18 @@ module Compiler
                     bc += "\x27"
                 when "^"
                     bc += "\x28"
+                when "=="
+                    bc += "\x34"
+                when "!="
+                    bc += "\x35"
+                when "<"
+                    bc += "\x36"
+                when ">"
+                    bc += "\x37"
+                when "<="
+                    bc += "\x38"
+                when ">="
+                    bc += "\x39"
                 end
             when :if
                 bc += self.encode_node node.value

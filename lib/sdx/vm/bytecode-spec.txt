@@ -39,6 +39,12 @@
 0x026    div           38
 0x027    mod           39
 0x028    pow           40
+0x34     eq            52
+0x35     ne            53
+0x36     lt            54
+0x37     gt            55
+0x38     le            56
+0x39     ge            57
 
 0x029    jmpi    )     41
 0x2a     jmp           42

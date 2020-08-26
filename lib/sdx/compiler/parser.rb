@@ -10,7 +10,7 @@ module Parser
             /\Aobject/ => :object,
             /\Anew/ => :new,
             /\Arequire/ => :require,
-            /\A(<|>|<=|>=|==)/ => :op,
+            /\A(<|>|<=|>=|==|!=)/ => :op,
             /\A(\+|-|\*|\/|%)?=/ => :eq,
             /\A(\+|-|\*|\/|%)/ => :op,
             /\A-?[0-9]+/ => :number,

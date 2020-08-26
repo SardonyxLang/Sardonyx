@@ -2,22 +2,6 @@ require 'sdx/vm/variables'
 require 'sdx/vm/datatypes'
 require 'sdx/vm/scope'
 
-def stringify(val)
-    if val.value.fields["__as_string"]
-        (val.value.fields["__as_string"].call).internal
-    else
-        val.value.to_s
-    end
-end
-
-def codify(val)
-    if val.value.fields["__as_code_string"]
-        (val.value.fields["__as_code_string"].call).internal
-    else
-        val.value.pretty_inspect
-    end
-end
-
 class VM
     attr_accessor :bc_io
     
@@ -26,6 +10,22 @@ class VM
             (val.value.fields["__as_bool"].call).internal
         else
             true
+        end
+    end
+
+    def stringify(val)
+        if val.value.fields["__as_string"]
+            (call val.value.fields["__as_string"], [], val.scope).internal
+        else
+            val.value.to_s
+        end
+    end
+    
+    def codify(val)
+        if val.value.fields["__as_code_string"]
+            (call val.value.fields["__as_code_string"], [], val.scope).internal
+        else
+            val.value.pretty_inspect
         end
     end
     
@@ -150,7 +150,13 @@ class VM
             0x30 => :object,
             0x31 => :new,
             0x32 => :block,
-            0x33 => :end
+            0x33 => :end,
+            0x34 => :eq,
+            0x35 => :ne,
+            0x36 => :lt,
+            0x37 => :gt,
+            0x38 => :le,
+            0x39 => :ge
         }
         bytes = []
         begin
@@ -279,7 +285,7 @@ class VM
                     res = (call a.value.fields["__add"], b.value)
                     push_to_stack (to_var res)
                 else
-                    error "Cannot add to #{a.type}"
+                    error "Cannot use + on #{a.type}"
                 end
             when :sub
                 b, a = pop_from_stack, pop_from_stack
@@ -287,7 +293,7 @@ class VM
                     res = (call a.value.fields["__sub"], b.value)
                     push_to_stack (Variable.new res, (get_type res), @global) 
                 else
-                    error "Cannot subtract from #{a.type}"
+                    error "Cannot use - on #{a.type}"
                 end
             when :mul
                 b, a = pop_from_stack, pop_from_stack
@@ -295,7 +301,7 @@ class VM
                     res = (call a.value.fields["__mul"], b.value)
                     push_to_stack (Variable.new res, (get_type res), @global) 
                 else
-                    error "Cannot multiply #{a.type}"
+                    error "Cannot use * on #{a.type}"
                 end
             when :div
                 b, a = pop_from_stack, pop_from_stack
@@ -303,7 +309,7 @@ class VM
                     res = (call a.value.fields["__div"], b.value)
                     push_to_stack (Variable.new res, (get_type res), @global) 
                 else
-                    error "Cannot divide #{a.type}"
+                    error "Cannot use / on #{a.type}"
                 end
             when :mod
                 b, a = pop_from_stack, pop_from_stack
@@ -311,7 +317,7 @@ class VM
                     res = (call a.value.fields["__mod"], b.value)
                     push_to_stack (Variable.new res, (get_type res), @global) 
                 else
-                    error "Cannot modulo #{a.type}"
+                    error "Cannot use % on #{a.type}"
                 end
             when :pow
                 b, a = pop_from_stack, pop_from_stack
@@ -319,7 +325,55 @@ class VM
                     res = (call a.value.fields["__pow"], b.value)
                     push_to_stack (Variable.new res, (get_type res), @global) 
                 else
-                    error "Cannot exponentiate #{a.type}"
+                    error "Cannot use ^ on #{a.type}"
+                end
+            when :eq
+                b, a = pop_from_stack, pop_from_stack
+                if a.value.fields["__eq"]
+                    res = (call a.value.fields["__eq"], b.value)
+                    push_to_stack (Variable.new res, (get_type res), @global) 
+                else
+                    error "Cannot use == on #{a.type}"
+                end
+            when :ne
+                b, a = pop_from_stack, pop_from_stack
+                if a.value.fields["__neq"]
+                    res = (call a.value.fields["__neq"], b.value)
+                    push_to_stack (Variable.new res, (get_type res), @global) 
+                else
+                    error "Cannot use != on #{a.type}"
+                end
+            when :lt
+                b, a = pop_from_stack, pop_from_stack
+                if a.value.fields["__lt"]
+                    res = (call a.value.fields["__lt"], b.value)
+                    push_to_stack (Variable.new res, (get_type res), @global) 
+                else
+                    error "Cannot use < on #{a.type}"
+                end
+            when :gt
+                b, a = pop_from_stack, pop_from_stack
+                if a.value.fields["__gt"]
+                    res = (call a.value.fields["__gt"], b.value)
+                    push_to_stack (Variable.new res, (get_type res), @global) 
+                else
+                    error "Cannot use > on #{a.type}"
+                end
+            when :le
+                b, a = pop_from_stack, pop_from_stack
+                if a.value.fields["__le"]
+                    res = (call a.value.fields["__le"], b.value)
+                    push_to_stack (Variable.new res, (get_type res), @global) 
+                else
+                    error "Cannot use <= on #{a.type}"
+                end
+            when :ge
+                b, a = pop_from_stack, pop_from_stack
+                if a.value.fields["__ge"]
+                    res = (call a.value.fields["__ge"], b.value)
+                    push_to_stack (Variable.new res, (get_type res), @global) 
+                else
+                    error "Cannot use >= on #{a.type}"
                 end
             when :jmpi
                 val = pop_from_stack

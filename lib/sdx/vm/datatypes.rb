@@ -58,6 +58,12 @@ class Bool < DataType
             end)),
             "__as_code_string" => (NativeFn.new 0, (Proc.new do
                 as_string
+            end)),
+            "__eq" => (NativeFnInternal.new (lambda do |other|
+                Bool.new @internal == other[0].internal
+            end)),
+            "__neq" => (NativeFnInternal.new (lambda do |other|
+                Bool.new @internal != other[0].internal
             end))
         }
     end
@@ -99,6 +105,24 @@ class Int < DataType
             end)),
             "__pow" => (NativeFnInternal.new (Proc.new do |other|
                 pow other[0]
+            end)),
+            "__lt" => (NativeFnInternal.new (Proc.new do |other|
+                lt other[0]
+            end)),
+            "__gt" => (NativeFnInternal.new (Proc.new do |other|
+                gt other[0]
+            end)),
+            "__le" => (NativeFnInternal.new (Proc.new do |other|
+                le other[0]
+            end)),
+            "__ge" => (NativeFnInternal.new (Proc.new do |other|
+                ge other[0]
+            end)),
+            "__eq" => (NativeFnInternal.new (lambda do |other|
+                Bool.new @internal == other[0].internal
+            end)),
+            "__neq" => (NativeFnInternal.new (lambda do |other|
+                Bool.new @internal != other[0].internal
             end))
         }
     end
@@ -134,6 +158,22 @@ class Int < DataType
     def pow(other)
         Int.new @internal ** other.internal
     end
+
+    def lt(other)
+        Bool.new @internal < other.internal
+    end
+
+    def gt(other)
+        Bool.new @internal > other.internal
+    end
+
+    def le(other)
+        Bool.new @internal <= other.internal
+    end
+
+    def ge(other)
+        Bool.new @internal >= other.internal
+    end
 end
 
 class Str < DataType 
@@ -153,6 +193,12 @@ class Str < DataType
             end)),
             "__mul" => (NativeFnInternal.new (Proc.new do |other|
                 mul other[0]
+            end)),
+            "__eq" => (NativeFnInternal.new (lambda do |other|
+                Bool.new @internal == other[0].internal
+            end)),
+            "__neq" => (NativeFnInternal.new (lambda do |other|
+                Bool.new @internal != other[0].internal
             end))
         }
     end
@@ -206,6 +252,24 @@ class Num < DataType
             end)),
             "__pow" => (NativeFnInternal.new (Proc.new do |other|
                 pow other[0]
+            end)),
+            "__lt" => (NativeFnInternal.new (Proc.new do |other|
+                lt other[0]
+            end)),
+            "__gt" => (NativeFnInternal.new (Proc.new do |other|
+                gt other[0]
+            end)),
+            "__le" => (NativeFnInternal.new (Proc.new do |other|
+                le other[0]
+            end)),
+            "__ge" => (NativeFnInternal.new (Proc.new do |other|
+                ge other[0]
+            end)),
+            "__eq" => (NativeFnInternal.new (lambda do |other|
+                Bool.new @internal == other[0].internal
+            end)),
+            "__neq" => (NativeFnInternal.new (lambda do |other|
+                Bool.new @internal != other[0].internal
             end))
         }
     end
@@ -241,6 +305,22 @@ class Num < DataType
     def pow(other)
         Num.new @internal ** other.internal
     end
+
+    def lt(other)
+        Bool.new @internal < other.internal
+    end
+
+    def gt(other)
+        Bool.new @internal > other.internal
+    end
+
+    def le(other)
+        Bool.new @internal <= other.internal
+    end
+
+    def ge(other)
+        Bool.new @internal >= other.internal
+    end
 end
 
 class Nil < DataType
@@ -249,6 +329,12 @@ class Nil < DataType
         @fields = {
             "__as_bool" => (NativeFnInternal.new (Proc.new do
                 Bool.new false
+            end)),
+            "__eq" => (NativeFnInternal.new (lambda do |other|
+                Bool.new @internal == other[0].internal
+            end)),
+            "__neq" => (NativeFnInternal.new (lambda do |other|
+                Bool.new @internal != other[0].internal
             end))
         }
     end
@@ -280,6 +366,12 @@ class List < DataType
             "__arity" => (Int.new 1),
             "__call" => (NativeFnInternal.new (Proc.new do |args, scope|
                 @internal[args[0].value.internal]
+            end)),
+            "__eq" => (NativeFnInternal.new (lambda do |other|
+                Bool.new @internal == other[0].internal
+            end)),
+            "__neq" => (NativeFnInternal.new (lambda do |other|
+                Bool.new @internal != other[0].internal
             end))
         }
     end
@@ -361,7 +453,13 @@ class Function < DataType
             "__call" => (NativeFnInternal.new (lambda do |args, scope|
                 call args, scope
             end)),
-            "__arity" => (Int.new args.size)
+            "__arity" => (Int.new args.size),
+            "__eq" => (NativeFnInternal.new (lambda do |other|
+                Bool.new @internal == other[0].internal
+            end)),
+            "__neq" => (NativeFnInternal.new (lambda do |other|
+                Bool.new @internal != other[0].internal
+            end))
         }
     end
 
@@ -387,7 +485,13 @@ class Block < DataType
             "__call" => (NativeFnInternal.new (Proc.new do |args, scope|
                 call args, scope
             end)),
-            "__arity" => (Int.new 1)
+            "__arity" => (Int.new 1),
+            "__eq" => (NativeFnInternal.new (lambda do |other|
+                Bool.new @internal == other[0].internal
+            end)),
+            "__neq" => (NativeFnInternal.new (lambda do |other|
+                Bool.new @internal != other[0].internal
+            end))
         }
     end
 
@@ -414,7 +518,13 @@ class Obj < DataType
             "__new" => (NativeFnInternal.new (Proc.new do |args, scope|
                 _new args, scope
             end)),
-            "__arity" => (Int.new args.size)
+            "__arity" => (Int.new args.size),
+            "__eq" => (NativeFnInternal.new (lambda do |other|
+                Bool.new @internal == other[0].internal
+            end)),
+            "__neq" => (NativeFnInternal.new (lambda do |other|
+                Bool.new @internal != other[0].internal
+            end))
         }
     end
 
