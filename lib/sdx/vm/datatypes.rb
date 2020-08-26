@@ -1,5 +1,3 @@
-require "sdx/vm/vm"
-require "sdx/vm/variables"
 require "stringio"
 
 class DataType 

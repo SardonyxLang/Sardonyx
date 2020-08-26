@@ -125,13 +125,15 @@ module Parser
 
         def self.parse_parens(tokens)
             if self.expect tokens, :lpar
-                tokens = tokens[1..tokens.size]
-                unless self.parse_expr tokens
+                tokens = tokens[1..-1]
+                res = self.parse_expr tokens
+                unless res
                     return nil
                 end
                 e, part = self.parse_expr tokens
-                tokens = tokens[part..tokens.size]
-                unless self.expect tokens, :rpar
+                tokens = tokens[part..-1]
+                res = self.expect tokens, :rpar
+                unless res
                     return nil
                 end
                 return [e, part + 2]
@@ -144,7 +146,7 @@ module Parser
             unless (self.expect tokens, :lbrack)
                 return nil
             end
-            tokens = tokens[1..tokens.size]
+            tokens = tokens[1..-1]
             children = []
             total = 1
             while true
@@ -152,13 +154,14 @@ module Parser
                     total += 1
                     break
                 end
-                unless self.parse_expr tokens
+                res = self.parse_expr tokens
+                unless res
                     return nil
                 end
-                e, part = self.parse_expr tokens
+                e, part = res
                 children << e
                 total += part
-                tokens = tokens[part..tokens.size]
+                tokens = tokens[part..-1]
                 if self.expect tokens, :rbrack
                     total += 1
                     break
@@ -167,7 +170,7 @@ module Parser
                     return nil
                 end
                 total += 1
-                tokens = tokens[1..tokens.size]
+                tokens = tokens[1..-1]
             end
             [ (Node.new :list, "", children), total ]
         end
@@ -176,7 +179,7 @@ module Parser
             unless (self.expect tokens, :lbrace)
                 return nil
             end
-            tokens = tokens[1..tokens.size]
+            tokens = tokens[1..-1]
             children = []
             total = 1
             while true
@@ -188,7 +191,7 @@ module Parser
                 if e
                     children << e[0]
                     total += e[1]
-                    tokens = tokens[e[1]..tokens.size]
+                    tokens = tokens[e[1]..-1]
                 else
                     puts "Syntax error at token ", tokens[0]
                     Kernel.exit 1
@@ -199,34 +202,44 @@ module Parser
         end
 
         def self.parse_literal(tokens)
-            (self.parse_block tokens) || (self.parse_bool tokens) || (self.parse_float tokens) || (self.parse_name tokens) || (self.parse_number tokens) || (self.parse_list tokens) || (self.parse_string tokens) || (self.parse_nil tokens) || (self.parse_parens tokens)
+            (self.parse_block tokens) || 
+            (self.parse_bool tokens) || 
+            (self.parse_float tokens) || 
+            (self.parse_name tokens) || 
+            (self.parse_number tokens) || 
+            (self.parse_list tokens) || 
+            (self.parse_string tokens) || 
+            (self.parse_nil tokens) || 
+            (self.parse_parens tokens)
         end
 
         def self.parse_call(tokens)
-            unless (self.parse_literal tokens)
+            res = (self.parse_literal tokens)
+            unless res
                 return nil
             end
-            callee = (self.parse_literal tokens)
+            callee = res
             total = callee[1]
-            tokens = tokens[total..tokens.size]
+            tokens = tokens[total..-1]
             callee = callee[0]
             if self.expect tokens, :lpar
                 args = []
-                tokens = tokens[1..tokens.size]
+                tokens = tokens[1..-1]
                 total += 1
                 if self.expect tokens, :rpar
                     return [ (Node.new :call, callee, args), total + 1 ]
                 end
                 while true
-                    unless (self.parse_expr tokens)
+                    res = (self.parse_expr tokens)
+                    unless res
                         return nil
                     end
-                    arg, part = (self.parse_expr tokens)
+                    arg, part = res
                     total += part
-                    tokens = tokens[part..tokens.size]
+                    tokens = tokens[part..-1]
                     args << arg
                     if self.expect tokens, :rpar
-                        tokens = tokens[1..tokens.size]
+                        tokens = tokens[1..-1]
                         total += 1
                         break
                     end
@@ -234,7 +247,7 @@ module Parser
                         return nil
                     end
                     total += 1
-                    tokens = tokens[1..tokens.size]
+                    tokens = tokens[1..-1]
                 end
                 return [ (Node.new :call, callee, args), total ]
             else
@@ -247,36 +260,38 @@ module Parser
                 return nil
             end
             total = 1
-            tokens = tokens[1..tokens.size]
+            tokens = tokens[1..-1]
             if self.lookahead tokens, :lpar, 1
-                unless (self.parse_literal tokens)
+                res = (self.parse_literal tokens)
+                unless res
                     return nil
                 end
-                callee = (self.parse_literal tokens)
+                callee = res
                 callee = callee[0]
                 args = []
-                tokens = tokens[2..tokens.size]
+                tokens = tokens[2..-1]
                 total += 2
                 if self.expect tokens, :rpar
                     return [ (Node.new :call, callee, args), total + 1 ]
                 end
                 while true
-                    unless (self.parse_expr tokens)
+                    res = (self.parse_expr tokens)
+                    unless res
                         return nil
                     end
-                    arg, part = (self.parse_expr tokens)
+                    arg, part = res
                     total += part
-                    tokens = tokens[part..tokens.size]
+                    tokens = tokens[part..-1]
                     args << arg
                     total += 1
                     if self.expect tokens, :rpar
-                        tokens = tokens[1..tokens.size]
+                        tokens = tokens[1..-1]
                         break
                     end
                     unless (self.expect tokens, :comma)
                         return nil
                     end
-                    tokens = tokens[1..tokens.size]
+                    tokens = tokens[1..-1]
                 end
                 return [ (Node.new :new, callee, args), total ]
             else
@@ -289,30 +304,33 @@ module Parser
                 return nil
             end
             total = 1
-            tokens = tokens[1..tokens.size]
-            unless self.parse_expr tokens
+            tokens = tokens[1..-1]
+            res = self.parse_expr tokens
+            unless res
                 return nil
             end
-            e, part = self.parse_expr tokens
+            e, part = res
             total += part
-            tokens = tokens[part..tokens.size]
-            unless self.parse_expr tokens
+            tokens = tokens[part..-1]
+            res = self.parse_expr tokens
+            unless res
                 return nil
             end
-            block, part = self.parse_expr tokens
+            block, part = res
             total += part
-            tokens = tokens[part..tokens.size]
+            tokens = tokens[part..-1]
             el = nil
             if self.expect tokens, :else
                 total += 1
-                tokens = tokens[1..tokens.size]
-                unless self.parse_expr tokens
+                tokens = tokens[1..-1]
+                res = self.parse_expr tokens
+                unless res
                     return nil
                 end
-                el, part = self.parse_expr tokens 
+                el, part = res
                 total += part
             end
-            return [ (Node.new :if, e, [block, el]), total ]
+            [ (Node.new :if, e, [block, el]), total ]
         end
 
         def self.parse_while(tokens)
@@ -320,19 +338,21 @@ module Parser
                 return nil
             end
             total = 1
-            tokens = tokens[1..tokens.size]
-            unless self.parse_expr tokens
+            tokens = tokens[1..-1]
+            res = self.parse_expr tokens
+            unless res
                 return nil
             end
-            e, part = self.parse_expr tokens
+            e, part = res
             total += part
-            tokens = tokens[part..tokens.size]
-            unless self.parse_expr tokens
+            tokens = tokens[part..-1]
+            res = self.parse_expr tokens
+            unless res
                 return nil
             end
-            block, part = self.parse_expr tokens
+            block, part = res
             total += part
-            return [ (Node.new :while, e, [block]), total ]
+            [ (Node.new :while, e, [block]), total ]
         end
 
         def self.parse_for(tokens)
@@ -340,27 +360,28 @@ module Parser
                 return nil
             end
             total = 1
-            tokens = tokens[1..tokens.size]
+            tokens = tokens[1..-1]
             name = nil
             if self.expect tokens, :name and self.lookahead tokens, :in, 1
                 name = tokens[0][0]
                 total += 2
-                tokens = tokens[2..tokens.size]
+                tokens = tokens[2..-1]
             end
-            unless self.parse_expr tokens
+            res = self.parse_expr tokens
+            unless res
                 return nil
             end
-            e, part = self.parse_expr tokens
+            e, part = res
             total += part
-            tokens = tokens[part..tokens.size]
-            unless self.parse_expr tokens
+            tokens = tokens[part..-1]
+            res = self.parse_expr tokens
+            unless res
                 return nil
             end
-            block, part = self.parse_expr tokens
+            block, part = res
             total += part
-            return [ (Node.new :for, e, [name, block]), total ]
+            [ (Node.new :for, e, [name, block]), total ]
         end
-
 
         def self.parse_factor(tokens)
             (self.parse_call tokens) || 
@@ -377,76 +398,82 @@ module Parser
 
         def self.parse_term(tokens)
             total = 0
-            unless self.parse_factor tokens
+            res = self.parse_factor tokens
+            unless res
                 return nil
             end
-            lhs, part = self.parse_factor tokens
+            lhs, part = res
             total += part
-            tokens = tokens[part..tokens.size]
+            tokens = tokens[part..-1]
             unless self.expect tokens, :l2op
                 return [lhs, part]
             end
             op = tokens[0][0]
             total += 1
-            tokens = tokens[1..tokens.size]
-            unless self.parse_factor tokens
+            tokens = tokens[1..-1]
+            res = self.parse_factor tokens
+            unless res
                 return nil
             end
-            rhs, part = self.parse_factor tokens
+            rhs, part = res
             total += part
-            tokens = tokens[part..tokens.size]
+            tokens = tokens[part..-1]
             out = (Node.new :op, op, [lhs])
             while self.expect tokens, :l2op
                 op = tokens[0][0]
                 total += 1
-                tokens = tokens[1..tokens.size]
-                unless self.parse_term tokens
+                tokens = tokens[1..-1]
+                res = self.parse_term tokens
+                unless res
                     return nil
                 end
-                rhs2, part = self.parse_term tokens
+                rhs2, part = res
                 total += part
-                tokens = tokens[part..tokens.size]
+                tokens = tokens[part..-1]
                 rhs = Node.new :op, op, [rhs, rhs2]
             end
             out.children << rhs
-            return [out, total]
+            [out, total]
         end
 
         def self.parse_op(tokens)
             total = 0
-            unless self.parse_term tokens
+            res = self.parse_term tokens
+            unless res
                 return nil
             end
-            lhs, part = self.parse_term tokens
+            lhs, part = res
             total += part
-            tokens = tokens[part..tokens.size]
+            tokens = tokens[part..-1]
             unless self.expect tokens, :l1op
                 return [lhs, part]
             end
             op = tokens[0][0]
             total += 1
-            tokens = tokens[1..tokens.size]
-            unless self.parse_term tokens
+            tokens = tokens[1..-1]
+            res = self.parse_term tokens
+            unless res
                 return nil
             end
-            rhs, part = self.parse_term tokens
+            rhs, part = res
             total += part
-            tokens = tokens[part..tokens.size]
+            tokens = tokens[part..-1]
             out = (Node.new :op, op, [lhs])
             while self.expect tokens, :l1op
                 op = tokens[0][0]
                 total += 1
-                tokens = tokens[1..tokens.size]
-                unless self.parse_term tokens
+                tokens = tokens[1..-1]
+                res = self.parse_term tokens
+                unless res
                     return nil
                 end
-                rhs2, part = self.parse_term tokens
+                rhs2, part = res
                 total += part
-                tokens = tokens[part..tokens.size]
+                tokens = tokens[part..-1]
                 rhs = Node.new :op, op, [rhs, rhs2]
             end
             out.children << rhs
-            return [out, total]
+            [out, total]
         end
 
         def self.parse_assign(tokens)
@@ -456,19 +483,20 @@ module Parser
             end
             name = tokens[0][0]
             total += 1
-            tokens = tokens[1..tokens.size]
+            tokens = tokens[1..-1]
             unless self.expect tokens, :eq
                 return nil
             end
             eq = tokens[0][0]
             total += 1
-            tokens = tokens[1..tokens.size]
-            unless self.parse_expr tokens
+            tokens = tokens[1..-1]
+            res = self.parse_expr tokens
+            unless res
                 return nil
             end
-            rhs, part = self.parse_expr tokens
+            rhs, part = res
             total += part
-            return [ (Node.new :assign, eq, [name, rhs]), total]
+            [ (Node.new :assign, eq, [name, rhs]), total]
         end
 
         def self.parse_fn(tokens)
@@ -476,23 +504,23 @@ module Parser
                 return nil
             end
             total = 1
-            tokens = tokens[1..tokens.size]
+            tokens = tokens[1..-1]
             unless self.expect tokens, :name
                 return nil
             end
             name = tokens[0][0]
             total += 1
-            tokens = tokens[1..tokens.size]
+            tokens = tokens[1..-1]
             unless self.expect tokens, :lpar
                 return nil
             end
             total += 1
-            tokens = tokens[1..tokens.size]
+            tokens = tokens[1..-1]
             args = []
             while true
                 if self.expect tokens, :rpar
                     total += 1
-                    tokens = tokens[1..tokens.size]
+                    tokens = tokens[1..-1]
                     break
                 end
                 unless self.expect tokens, :name
@@ -500,24 +528,25 @@ module Parser
                 end
                 args << tokens[0][0]
                 total += 1
-                tokens = tokens[1..tokens.size]
+                tokens = tokens[1..-1]
                 if self.expect tokens, :rpar
                     total += 1
-                    tokens = tokens[1..tokens.size]
+                    tokens = tokens[1..-1]
                     break
                 end
                 unless self.expect tokens, :comma
                     return nil
                 end
                 total += 1
-                tokens = tokens[1..tokens.size]
+                tokens = tokens[1..-1]
             end
-            unless self.parse_expr tokens
+            res = self.parse_expr tokens
+            unless res
                 return nil
             end
-            body, part = self.parse_expr tokens
+            body, part = res
             total += part
-            return [ (Node.new :fn, name, [args, body]), total ]
+            [ (Node.new :fn, name, [args, body]), total ]
         end
 
         def self.parse_object(tokens)
@@ -525,21 +554,21 @@ module Parser
                 return nil
             end
             total = 1
-            tokens = tokens[1..tokens.size]
+            tokens = tokens[1..-1]
             unless self.expect tokens, :name
                 return nil
             end
             name = tokens[0][0]
             total += 1
-            tokens = tokens[1..tokens.size]
+            tokens = tokens[1..-1]
             args = []
             if self.expect tokens, :lpar
                 total += 1
-                tokens = tokens[1..tokens.size]
+                tokens = tokens[1..-1]
                 while true
                     if self.expect tokens, :rpar
                         total += 1
-                        tokens = tokens[1..tokens.size]
+                        tokens = tokens[1..-1]
                         break
                     end
                     unless self.expect tokens, :name
@@ -547,36 +576,37 @@ module Parser
                     end
                     args << tokens[0][0]
                     total += 1
-                    tokens = tokens[1..tokens.size]
+                    tokens = tokens[1..-1]
                     if self.expect tokens, :rpar
                         total += 1
-                        tokens = tokens[1..tokens.size]
+                        tokens = tokens[1..-1]
                         break
                     end
                     unless self.expect tokens, :comma
                         return nil
                     end
                     total += 1
-                    tokens = tokens[1..tokens.size]
+                    tokens = tokens[1..-1]
                 end
             end
-            unless self.parse_expr tokens
+            res = self.parse_expr tokens
+            unless res
                 return nil
             end
-            body, part = self.parse_expr tokens
+            body, part = res
             total += part
-            return [ (Node.new :object, name, [args, body]), total ]
+            [ (Node.new :object, name, [args, body]), total ]
         end
 
         def self.parse_require(tokens)
             unless self.expect tokens, :require
                 return nil
             end
-            tokens = tokens[1..tokens.size]
+            tokens = tokens[1..-1]
             unless self.expect tokens, :string
                 return nil
             end
-            return [ (Node.new :require, tokens[0][0][1..-2], []), 2 ]
+            [ (Node.new :require, tokens[0][0][1..-2], []), 2 ]
         end
             
         def self.parse_expr(tokens)
@@ -617,7 +647,7 @@ module Parser
                     else
                         parsed << e[0]
                     end
-                    tokens = tokens[e[1]..tokens.size]
+                    tokens = tokens[e[1]..-1]
                 else
                     puts "Syntax error at token ", tokens[0][1]
                     Kernel.exit 1
