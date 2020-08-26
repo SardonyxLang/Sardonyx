@@ -172,7 +172,7 @@ module Parser
             while true
                 if self.expect tokens, :rbrace
                     total += 1
-                    break
+                    return [ (Node.new :block, "", children), total ]
                 end
                 e = self.parse_expr tokens
                 if e
@@ -184,23 +184,26 @@ module Parser
                     Kernel.exit 1
                 end
             end
+            total += 1
             [ (Node.new :block, "", children), total ]
         end
 
         def self.parse_literal(tokens)
-            (self.parse_block tokens) ||  self.parse_float(tokens) || (self.parse_name tokens) || (self.parse_number tokens) || (self.parse_list tokens) || (self.parse_string tokens) || (self.parse_nil tokens) || (self.parse_parens tokens)
+            (self.parse_block tokens) ||  (self.parse_float tokens) || (self.parse_name tokens) || (self.parse_number tokens) || (self.parse_list tokens) || (self.parse_string tokens) || (self.parse_nil tokens) || (self.parse_parens tokens)
         end
 
         def self.parse_call(tokens)
-            if self.lookahead tokens, :lpar, 1
-                unless (self.parse_literal tokens)
-                    return nil
-                end
-                callee = (self.parse_literal tokens)
-                callee = callee[0]
+            unless (self.parse_literal tokens)
+                return nil
+            end
+            callee = (self.parse_literal tokens)
+            total = callee[1]
+            tokens = tokens[total..tokens.size]
+            callee = callee[0]
+            if self.expect tokens, :lpar
                 args = []
-                tokens = tokens[2..tokens.size]
-                total = 2
+                tokens = tokens[1..tokens.size]
+                total += 1
                 if self.expect tokens, :rpar
                     return [ (Node.new :call, callee, args), total + 1 ]
                 end
