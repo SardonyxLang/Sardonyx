@@ -314,12 +314,12 @@ class List < DataType
         if val
             return val
         else
-            return Variable.new Nil.new
+            return Variable.new Nil.new, :nil, @internal[0].scope
         end
     end
     
     def add(other)
-        return List.new [*@internal, other]
+        return List.new [*@internal, (Variable.new other, (get_type other), @internal[0].scope)]
     end
 
     def mul(other)

@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
     s.name = 'sardonyx'
-    s.version = '0.1.821'
+    s.version = '0.1.822'
     s.files = [
         'lib/sdx/vm/datatypes.rb', 
         'lib/sdx/vm/scope.rb', 
