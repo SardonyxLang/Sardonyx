@@ -4,7 +4,11 @@ require 'sdx/vm/scope'
 
 def codify(val)
     if val.value.fields["__as_code_string"]
-        (val.value.fields["__as_code_string"].call).internal
+        if val.value.fields["__as_code_string"].respond_to? :call
+            (val.value.fields["__as_code_string"].call).internal
+        else
+            (val.value.fields["__as_code_string"].fields["__call"].call [], val.scope).internal
+        end
     else
         val.value.pretty_inspect
     end
