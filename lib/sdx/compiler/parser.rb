@@ -11,11 +11,12 @@ module Parser
             /\Anew/ => :new,
             /\Arequire/ => :require,
             /\A(true|false)/ => :bool,
-            /\A(<|>|<=|>=|==|!=)/ => :op,
-            /\A(\+|-|\*|\/|%)?=/ => :eq,
-            /\A(\+|-|\*|\/|%)/ => :op,
-            /\A-?[0-9]+/ => :number,
             /\A-?[0-9]+\.[0-9]+/ => :float,
+            /\A-?[0-9]+/ => :number,
+            /\A(\+|-)/ => :l1op,
+            /\A(\/|\*|%)/ => :l2op,
+            /\A(<|>|<=|>=|==|!=)/ => :l1op,
+            /\A(\+|-|\*|\/|%)?=/ => :eq,
             /\A"([^"]|\\")*"/ => :string,
             /\Anil/ => :nil,
             /\A\(/ => :lpar,
@@ -359,7 +360,7 @@ module Parser
             return [ (Node.new :for, e, [name, block]), total ]
         end
 
-        def self.parse_op(tokens)
+        def self.parse_term(tokens)
             total = 0
             unless self.parse_literal tokens
                 return nil
@@ -367,16 +368,38 @@ module Parser
             lhs, part = self.parse_literal tokens
             total += part
             tokens = tokens[part..tokens.size]
-            unless self.expect tokens, :op
-                return nil
+            unless self.expect tokens, :l2op
+                return [lhs, part]
             end
             op = tokens[0][0]
             total += 1
             tokens = tokens[1..tokens.size]
-            unless self.parse_expr tokens
+            unless self.parse_literal tokens
                 return nil
             end
-            rhs, part = self.parse_expr tokens
+            rhs, part = self.parse_literal tokens
+            total += part
+            return [ (Node.new :op, op, [lhs, rhs]), total]
+        end
+
+        def self.parse_op(tokens)
+            total = 0
+            unless self.parse_term tokens
+                return nil
+            end
+            lhs, part = self.parse_term tokens
+            total += part
+            tokens = tokens[part..tokens.size]
+            unless self.expect tokens, :l1op
+                return [lhs, part]
+            end
+            op = tokens[0][0]
+            total += 1
+            tokens = tokens[1..tokens.size]
+            unless self.parse_term tokens
+                return nil
+            end
+            rhs, part = self.parse_term tokens
             total += part
             return [ (Node.new :op, op, [lhs, rhs]), total]
         end
@@ -512,7 +535,7 @@ module Parser
         end
             
         def self.parse_expr(tokens)
-            (self.parse_require tokens) || (self.parse_new tokens) || (self.parse_object tokens) || (self.parse_fn tokens) || (self.parse_assign tokens) || (self.parse_op tokens)  || (self.parse_call tokens) || (self.parse_literal tokens) || (self.parse_if tokens) || (self.parse_while tokens) || (self.parse_for tokens)
+            (self.parse_require tokens) || (self.parse_new tokens) || (self.parse_object tokens) || (self.parse_fn tokens) || (self.parse_assign tokens) || (self.parse_op tokens)  || (self.parse_term tokens) || (self.parse_call tokens) || (self.parse_literal tokens) || (self.parse_if tokens) || (self.parse_while tokens) || (self.parse_for tokens)
         end
 
         def self.parse(tokens, path)
