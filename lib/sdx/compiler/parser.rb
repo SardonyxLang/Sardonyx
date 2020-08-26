@@ -113,6 +113,23 @@ module Parser
             end
         end
 
+        def self.parse_parens(tokens)
+            if self.expect tokens, :lpar
+                tokens = tokens[1..tokens.size]
+                unless self.parse_expr tokens
+                    return nil
+                end
+                e, part = self.parse_expr tokens
+                tokens = tokens[part..tokens.size]
+                unless self.expect tokens, :rpar
+                    return nil
+                end
+                return [e, part + 2]
+            else
+                return nil
+            end
+        end
+
         def self.parse_list(tokens)
             unless (self.expect tokens, :lbrack)
                 return nil
@@ -171,7 +188,7 @@ module Parser
         end
 
         def self.parse_literal(tokens)
-            (self.parse_block tokens) ||  self.parse_float(tokens) || (self.parse_name tokens) || (self.parse_number tokens) || (self.parse_list tokens) || (self.parse_string tokens) || (self.parse_nil tokens)
+            (self.parse_block tokens) ||  self.parse_float(tokens) || (self.parse_name tokens) || (self.parse_number tokens) || (self.parse_list tokens) || (self.parse_string tokens) || (self.parse_nil tokens) || (self.parse_parens tokens)
         end
 
         def self.parse_call(tokens)

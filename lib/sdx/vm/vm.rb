@@ -135,6 +135,7 @@ class VM
             0x24 => :sub,
             0x25 => :mul,
             0x26 => :div,
+            0x27 => :mod,
             0x12 => :bool,
             0x13 => :int,
             0x14 => :str,
