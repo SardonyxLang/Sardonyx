@@ -285,6 +285,7 @@ class List < DataType
     end
 
     def as_string
+        s = ""
         @internal.each do |item|
             s += (stringify item) + ", "
         end
@@ -294,6 +295,7 @@ class List < DataType
     end
 
     def as_code_string
+        s = ""
         @internal.each do |item|
             s += (codify item) + ", "
         end
