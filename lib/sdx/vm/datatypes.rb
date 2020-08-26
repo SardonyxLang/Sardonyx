@@ -83,22 +83,22 @@ class Int < DataType
                 as_bool
             end)),
             "__add" => (NativeFnInternal.new (Proc.new do |other|
-                add other
+                add other[0]
             end)),
             "__sub" => (NativeFnInternal.new (Proc.new do |other|
-                sub other
+                sub other[0]
             end)),
             "__mul" => (NativeFnInternal.new (Proc.new do |other|
-                mul other
+                mul other[0]
             end)),
             "__div" => (NativeFnInternal.new (Proc.new do |other|
-                div other
+                div other[0]
             end)),
             "__mod" => (NativeFnInternal.new (Proc.new do |other|
-                mod other
+                mod other[0]
             end)),
             "__pow" => (NativeFnInternal.new (Proc.new do |other|
-                pow other
+                pow other[0]
             end))
         }
     end
@@ -149,10 +149,10 @@ class Str < DataType
                 as_code_string
             end)),
             "__add" => (NativeFnInternal.new (Proc.new do |other|
-                add other
+                add other[0]
             end)),
             "__mul" => (NativeFnInternal.new (Proc.new do |other|
-                mul other
+                mul other[0]
             end))
         }
     end
@@ -190,22 +190,22 @@ class Num < DataType
                 as_bool
             end)),
             "__add" => (NativeFnInternal.new (Proc.new do |other|
-                add other
+                add other[0]
             end)),
             "__sub" => (NativeFnInternal.new (Proc.new do |other|
-                sub other
+                sub other[0]
             end)),
             "__mul" => (NativeFnInternal.new (Proc.new do |other|
-                mul other
+                mul other[0]
             end)),
             "__div" => (NativeFnInternal.new (Proc.new do |other|
-                div other
+                div other[0]
             end)),
             "__mod" => (NativeFnInternal.new (Proc.new do |other|
-                mod other
+                mod other[0]
             end)),
             "__pow" => (NativeFnInternal.new (Proc.new do |other|
-                pow other
+                pow other[0]
             end))
         }
     end
@@ -272,10 +272,10 @@ class List < DataType
                 iter
             end)),
             "__add" => (NativeFnInternal.new (Proc.new do |other|
-                add other
+                add other[0]
             end)),
             "__mul" => (NativeFnInternal.new (Proc.new do |other|
-                mul other
+                mul other[0]
             end)),
             "__arity" => (Int.new 1),
             "__call" => (NativeFnInternal.new (Proc.new do |args, scope|
@@ -285,21 +285,19 @@ class List < DataType
     end
 
     def as_string
-        s = "["
         @internal.each do |item|
             s += (stringify item) + ", "
         end
-        s = s[0..-3]
+        s = "[" + s[0..-3]
         s += "]"
         Str.new s
     end
 
     def as_code_string
-        s = "["
         @internal.each do |item|
             s += (codify item) + ", "
         end
-        s = s[0..-3]
+        s = "[" + s[0..-3]
         s += "]"
         Str.new s
     end
