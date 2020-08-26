@@ -2,6 +2,14 @@ require 'sdx/vm/variables'
 require 'sdx/vm/datatypes'
 require 'sdx/vm/scope'
 
+def codify(val)
+    if val.value.fields["__as_code_string"]
+        (val.value.fields["__as_code_string"].call).internal
+    else
+        val.value.pretty_inspect
+    end
+end
+
 class VM
     attr_accessor :bc_io
     
@@ -18,14 +26,6 @@ class VM
             (call val.value.fields["__as_string"], [], val.scope).internal
         else
             val.value.to_s
-        end
-    end
-    
-    def codify(val)
-        if val.value.fields["__as_code_string"]
-            (call val.value.fields["__as_code_string"], [], val.scope).internal
-        else
-            val.value.pretty_inspect
         end
     end
     
