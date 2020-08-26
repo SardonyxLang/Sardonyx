@@ -341,8 +341,9 @@ class Nil < DataType
 end
 
 class List < DataType
-    def initialize(val)
+    def initialize(val, scope=nil)
         @internal = val
+        @scope = scope
         @pos = 0
         @fields = {
             "__as_string" => (NativeFnInternal.new (Proc.new do 
@@ -411,7 +412,7 @@ class List < DataType
     end
     
     def add(other)
-        return List.new [*@internal, (Variable.new other, (get_type other), @internal[0].scope)]
+        return List.new [*@internal, (Variable.new other, (get_type other), @scope || @internal[0].scope)]
     end
 
     def mul(other)

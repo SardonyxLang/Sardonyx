@@ -103,10 +103,12 @@ module Compiler
                     end
                     i += "\x2a#{e.size}\x18"
                 end
-                bc += "\x29#{i.size}\x18" + i
+                bc += "\x2b#{i.size}\x18" + i
                 if e
                     bc += e
                 end
+            when :bool
+                bc += "\x21\x12#{node.value}\x18"
             when :name
                 bc += "\x20#{node.value}\x18"
             when :nil

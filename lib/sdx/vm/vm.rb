@@ -18,10 +18,14 @@ class VM
     attr_accessor :bc_io
     
     def truthy(val)
+        case val.value
+        when Bool
+            return val.value.internal
+        end
         if val.value.fields["__as_bool"]
-            (val.value.fields["__as_bool"].call).internal
+            return (val.value.fields["__as_bool"].call).internal
         else
-            true
+            return true
         end
     end
 
@@ -275,12 +279,19 @@ class VM
                         vals << pop_from_stack
                     end
                     vals.reverse!
-                    push_to_stack Variable.new (List.new vals), :list, @global
+                    push_to_stack Variable.new (List.new vals, @global), :list, @global
                 when :block
                     size = get_string.to_i
                     body = 
                         ((load_bytes size, false).map { |e| e.chr }).join ""
                     push_to_stack Variable.new (Block.new body), :block, @global
+                when :bool
+                    val = get_string
+                    t = {
+                        "true" => true,
+                        "false" => false,
+                    }
+                    push_to_stack Variable.new (Bool.new t[val]), :bool, @global
                 when :nil
                     push_to_stack Variable.new (Nil.new), :nil, @global
                 end

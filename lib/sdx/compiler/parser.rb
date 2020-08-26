@@ -10,6 +10,7 @@ module Parser
             /\Aobject/ => :object,
             /\Anew/ => :new,
             /\Arequire/ => :require,
+            /\A(true|false)/ => :bool,
             /\A(<|>|<=|>=|==|!=)/ => :op,
             /\A(\+|-|\*|\/|%)?=/ => :eq,
             /\A(\+|-|\*|\/|%)/ => :op,
@@ -92,6 +93,14 @@ module Parser
         def self.parse_number(tokens)
             if self.expect tokens, :number
                 [ (Node.new :number, tokens[0][0], []), 1 ]
+            else
+                nil
+            end
+        end
+
+        def self.parse_bool(tokens)
+            if self.expect tokens, :bool
+                [ (Node.new :bool, tokens[0][0], []), 1 ]
             else
                 nil
             end
@@ -189,7 +198,7 @@ module Parser
         end
 
         def self.parse_literal(tokens)
-            (self.parse_block tokens) ||  (self.parse_float tokens) || (self.parse_name tokens) || (self.parse_number tokens) || (self.parse_list tokens) || (self.parse_string tokens) || (self.parse_nil tokens) || (self.parse_parens tokens)
+            (self.parse_block tokens) || (self.parse_bool tokens) || (self.parse_float tokens) || (self.parse_name tokens) || (self.parse_number tokens) || (self.parse_list tokens) || (self.parse_string tokens) || (self.parse_nil tokens) || (self.parse_parens tokens)
         end
 
         def self.parse_call(tokens)
