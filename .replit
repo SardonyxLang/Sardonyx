@@ -1,2 +1,2 @@
 language = "ruby"
-run = "chmod +x main.rb && ./main.rb test.sdx"
+run = "bash main.sh"
