@@ -5,7 +5,7 @@ require "sdx/vm/vm"
 require "stringio"
 require "readline"
 
-if (ENV.fetch("SDX_PATH", "").split ":")
+if (ENV.fetch("SDX_PATH", "").split ":") == []
     puts "\x1b[0;33mLooks like you don't have anything in your SDX_PATH! You should install the stdlib at https://github.com/SardonyxLang/SardonyxStd.\x1b[0;0m"
 end
 
