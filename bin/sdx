@@ -5,6 +5,10 @@ require "sdx/vm/vm"
 require "stringio"
 require "readline"
 
+if (ENV.fetch("SDX_PATH", "").split ":")
+    puts "\x1b[0;33mLooks like you don't have anything in your SDX_PATH! You should install the stdlib at https://github.com/SardonyxLang/SardonyxStd.\x1b[0;0m"
+end
+
 if ARGV.size == 1
     path = [(File.expand_path File.dirname ARGV[0]), *(ENV.fetch("SDX_PATH", "").split ":")]
     code = File.read ARGV[0]
@@ -18,7 +22,7 @@ if ARGV.size == 1
 else
     path = [(File.expand_path Dir.pwd), *(ENV.fetch("SDX_PATH", "").split ":")]
     vm = VM.new StringIO.new ""
-    puts "Sardonyx v0.3.0"
+    puts "Sardonyx v0.3.1"
     puts "Type :help for help, or :exit to exit"
     loop do
         begin
