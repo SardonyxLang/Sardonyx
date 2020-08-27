@@ -707,13 +707,13 @@ Invalid code at #{line}:#{col}
                             error "Cannot find file #{e[0].value}.sdx anywhere in path"
                             State::state = :error
                         end
-                        lexed = Lexer.lex code
-                        ast = self.parse lexed, path, (code.split "\n")
-                        parsed.concat ast
+                        tokens = tokens[e[1]..-1]
+                        lexed, _ = Lexer.lex code
+                        tokens = [*lexed, *tokens]
                     else
                         parsed << e[0]
+                        tokens = tokens[e[1]..-1]
                     end
-                    tokens = tokens[e[1]..-1]
                 else
                     error %{
 Unexpected token #{tokens[0][1]} at #{tokens[0][2]}:#{tokens[0][3]}
