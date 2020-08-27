@@ -220,13 +220,15 @@ class VM
 
     def error(msg)
         puts "\x1b[0;31mError in VM: #{msg}\x1b[0;0m"
-        exit 1
+        @stack = []
+        State::state = :error
     end
 
     def interpret(do_end=true) # builds stack from bytecode
         loop do  
             loaded_bytes = load_bytes(1) # loads in first byte for initial instruction
             break if loaded_bytes[0] == :end_prg # end of program reached 
+            break if State::state != :ok
 
             case loaded_bytes[0]
             when :make
@@ -302,7 +304,7 @@ class VM
                     res = (call a.value.fields["__add"], b.value)
                     push_to_stack (to_var res)
                 else
-                    error "Cannot use + on #{a.type}"
+                    error "Cannot use + on #{codify a}"
                 end
             when :sub
                 b, a = pop_from_stack, pop_from_stack
@@ -310,7 +312,7 @@ class VM
                     res = (call a.value.fields["__sub"], b.value)
                     push_to_stack (Variable.new res, (get_type res), @global) 
                 else
-                    error "Cannot use - on #{a.type}"
+                    error "Cannot use - on #{codify a}"
                 end
             when :mul
                 b, a = pop_from_stack, pop_from_stack
@@ -318,7 +320,7 @@ class VM
                     res = (call a.value.fields["__mul"], b.value)
                     push_to_stack (Variable.new res, (get_type res), @global) 
                 else
-                    error "Cannot use * on #{a.type}"
+                    error "Cannot use * on #{codify a}"
                 end
             when :div
                 b, a = pop_from_stack, pop_from_stack
@@ -326,7 +328,7 @@ class VM
                     res = (call a.value.fields["__div"], b.value)
                     push_to_stack (Variable.new res, (get_type res), @global) 
                 else
-                    error "Cannot use / on #{a.type}"
+                    error "Cannot use / on #{codify a}"
                 end
             when :mod
                 b, a = pop_from_stack, pop_from_stack
@@ -334,7 +336,7 @@ class VM
                     res = (call a.value.fields["__mod"], b.value)
                     push_to_stack (Variable.new res, (get_type res), @global) 
                 else
-                    error "Cannot use % on #{a.type}"
+                    error "Cannot use % on #{codify a}"
                 end
             when :pow
                 b, a = pop_from_stack, pop_from_stack
@@ -342,7 +344,7 @@ class VM
                     res = (call a.value.fields["__pow"], b.value)
                     push_to_stack (Variable.new res, (get_type res), @global) 
                 else
-                    error "Cannot use ^ on #{a.type}"
+                    error "Cannot use ^ on #{codify a}"
                 end
             when :eq
                 b, a = pop_from_stack, pop_from_stack
@@ -350,7 +352,7 @@ class VM
                     res = (call a.value.fields["__eq"], b.value)
                     push_to_stack (Variable.new res, (get_type res), @global) 
                 else
-                    error "Cannot use == on #{a.type}"
+                    error "Cannot use == on #{codify a}"
                 end
             when :ne
                 b, a = pop_from_stack, pop_from_stack
@@ -358,7 +360,7 @@ class VM
                     res = (call a.value.fields["__neq"], b.value)
                     push_to_stack (Variable.new res, (get_type res), @global) 
                 else
-                    error "Cannot use != on #{a.type}"
+                    error "Cannot use != on #{codify a}"
                 end
             when :lt
                 b, a = pop_from_stack, pop_from_stack
@@ -366,7 +368,7 @@ class VM
                     res = (call a.value.fields["__lt"], b.value)
                     push_to_stack (Variable.new res, (get_type res), @global) 
                 else
-                    error "Cannot use < on #{a.type}"
+                    error "Cannot use < on #{codify a}"
                 end
             when :gt
                 b, a = pop_from_stack, pop_from_stack
@@ -374,7 +376,7 @@ class VM
                     res = (call a.value.fields["__gt"], b.value)
                     push_to_stack (Variable.new res, (get_type res), @global) 
                 else
-                    error "Cannot use > on #{a.type}"
+                    error "Cannot use > on #{codify a}"
                 end
             when :le
                 b, a = pop_from_stack, pop_from_stack
@@ -382,7 +384,7 @@ class VM
                     res = (call a.value.fields["__le"], b.value)
                     push_to_stack (Variable.new res, (get_type res), @global) 
                 else
-                    error "Cannot use <= on #{a.type}"
+                    error "Cannot use <= on #{codify a}"
                 end
             when :ge
                 b, a = pop_from_stack, pop_from_stack
@@ -390,7 +392,7 @@ class VM
                     res = (call a.value.fields["__ge"], b.value)
                     push_to_stack (Variable.new res, (get_type res), @global) 
                 else
-                    error "Cannot use >= on #{a.type}"
+                    error "Cannot use >= on #{codify a}"
                 end
             when :jmpi
                 val = pop_from_stack
@@ -420,12 +422,16 @@ class VM
                 if val.value.fields["__reset"]
                     call val.value.fields["__reset"]
                     push_to_stack val
+                else
+                    error "Cannot reset #{codify val}"
                 end
             when :iter
                 val = pop_from_stack
                 if val.value.fields["__iter"]
                     res = call val.value.fields["__iter"]
                     push_to_stack res
+                else
+                    error "Cannot iterate #{codify val}"
                 end
             when :end
                 if do_end
@@ -436,45 +442,53 @@ class VM
                 if callable val
                     args = []
                     (arity val).internal.times do
+                        break if State::state != :ok
                         this = pop_from_stack
-                        unless this
+                        if !this
                             error "Not enough arguments: expected #{val.value.fields["__arity"].internal}, got #{args.size}"
+                        else
+                            args << this
                         end
-                        args << this
                     end
-                    scope = nil
-                    begin
-                        scope = val.scope
-                    rescue
-                        scope = @global
-                    end
-                    ret = call val, *args
-                    if ret
-                        push_to_stack ret
+                    if State::state == :ok
+                        scope = nil
+                        begin
+                            scope = val.scope
+                        rescue
+                            scope = @global
+                        end
+                        ret = call val, *args
+                        if ret
+                            push_to_stack ret
+                        end
                     end
                 else
-                    error "Cannot call #{stringify val}"
+                    error "Cannot call #{codify val}"
                 end
             when :new
                 val = pop_from_stack
                 if val.value.fields["__new"] and val.value.fields["__arity"]
                     args = []
                     val.value.fields["__arity"].internal.times do
+                        break if State::state != :ok
                         this = pop_from_stack
-                        unless this
+                        if !this
                             error "Not enough arguments: expected #{val.value.fields["__arity"].internal}, got #{args.size}"
+                        else 
+                            args << this
                         end
-                        args << this
                     end
-                    f = Proc.new do |args, scope|
-                        call val.value.fields["__new"], args, scope
-                    end
-                    ret = Variable.new (InstantiatedObj.new f.call args, @global), :instobj, @global
-                    if ret
-                        push_to_stack ret
+                    if State::state == :ok
+                        f = Proc.new do |args, scope|
+                            call val.value.fields["__new"], args, scope
+                        end
+                        ret = Variable.new (InstantiatedObj.new f.call args, @global), :instobj, @global
+                        if ret
+                            push_to_stack ret
+                        end
                     end
                 else
-                    error "Cannot instantiate #{stringify val}"
+                    error "Cannot instantiate #{codify val}"
                 end
             end
         end

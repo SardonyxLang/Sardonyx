@@ -1,6 +1,19 @@
+class State
+    class << self
+        attr_accessor :state
+    end
+    @@state = :ok
+end
+
+def error(msg)
+    puts "\x1b[0;31mError in parser: #{msg}\x1b[0;0m"
+end
+
 module Parser
+
     class Lexer
         TOKENS = {
+            /\A#.*/ => :comment,
             /\Aif/ => :if,
             /\Aelse/ => :else,
             /\Awhile/ => :while,
@@ -29,25 +42,78 @@ module Parser
             /\A[A-Za-z_][A-Za-z0-9_]*([:.][A-Za-z_][A-Za-z0-9_]*)*/ => :name
         }
 
+        class << self
+            attr_accessor :lines
+        end
+
         def self.lex(code)
+            @@lines = code.split "\n"
             lexed = []
-            found = false
-            while code.size > 0
-                TOKENS.each { |re, tag|
-                    if (code =~ re) != nil
-                        found = true
-                        m = (re.match code)
-                        lexed << [ m[0], tag ]
-                        code = code[(m.end 0)..code.size].lstrip
+            comment = false
+            line = col = 0
+            State::state = :ok
+            while State::state == :ok and code.size > 0
+                while true
+                    if code.size != 0 and code[0] == "\n"
+                        col = 0
+                        line += 1
+                        code = code[1..-1]
+                    elsif code.size != 0 and code[0].strip.empty?
+                        if State::state == :ok
+                            col += 1
+                        end
+                        code = code[1..-1]
+                    else
                         break
                     end
-                }
-                if !found
-                    puts "Syntax error: ", code
-                    Kernel.exit 1
+                end
+                if !comment && (code.start_with? "#>")
+                    comment = true
+                    code = code[2..-1]
+                elsif comment && (code.start_with? "<#")
+                    comment = false
+                    code = code[2..-1]
+                elsif comment
+                    code = code[1..-1]
+                else
+                    found = false
+                    TOKENS.each { |re, tag|
+                        if (code =~ re) != nil
+                            found = true
+                            m = (re.match code)
+                            if tag != :comment
+                                lexed << [ m[0], tag, line, col ]
+                            end
+                            code = code[(m.end 0)..-1]
+                            col += (m.end 0)
+                            while true
+                                if code.size != 0 and code[0] == "\n"
+                                    col = 0
+                                    line += 1
+                                    code = code[1..-1]
+                                elsif code.size != 0 and code[0].strip.empty?
+                                    if State::state == :ok
+                                        col += 1
+                                    end
+                                    code = code[1..-1]
+                                else
+                                    break
+                                end
+                            end
+                            break
+                        end
+                    }
+                    if !found
+                        error %{
+Invalid code at #{line}:#{col}
+#{" " * line.to_s.size} |
+#{line} | #{@@lines[line].rstrip}
+#{" " * line.to_s.size} | #{" " * col}^ here}
+                        State::state = :error
+                    end
                 end
             end
-            lexed
+            [ lexed, @@lines ]
         end
     end
 
@@ -623,9 +689,9 @@ module Parser
             (self.parse_for tokens)
         end
 
-        def self.parse(tokens, path)
+        def self.parse(tokens, path, lines)
             parsed = []
-            while tokens.size > 0
+            while State::state == :ok and tokens.size > 0
                 e = self.parse_expr tokens
                 if e
                     if e[0].nodetype == :require
@@ -638,19 +704,23 @@ module Parser
                             end
                         end
                         unless code
-                            puts "Cannot find file #{e[0].value}.sdx anywhere in path"
-                            Kernel.exit 1
+                            error "Cannot find file #{e[0].value}.sdx anywhere in path"
+                            State::state = :error
                         end
                         lexed = Lexer.lex code
-                        ast = self.parse lexed, path
+                        ast = self.parse lexed, path, (code.split "\n")
                         parsed.concat ast
                     else
                         parsed << e[0]
                     end
                     tokens = tokens[e[1]..-1]
                 else
-                    puts "Syntax error at token ", tokens[0][1]
-                    Kernel.exit 1
+                    error %{
+Unexpected token #{tokens[0][1]} at #{tokens[0][2]}:#{tokens[0][3]}
+#{" " * tokens[0][2].to_s.size} |
+#{tokens[0][2]} | #{lines[tokens[0][2]].rstrip}
+#{" " * tokens[0][2].to_s.size} | #{" " * tokens[0][3]}^ here}
+                    State::state = :error
                 end
             end
             parsed

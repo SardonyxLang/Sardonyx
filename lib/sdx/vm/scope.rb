@@ -3,7 +3,6 @@ class GLOBAL_SCOPE
 
     def error(msg)
         puts "\x1b[0;31mError in VM: #{msg}\x1b[0;0m"
-        exit 1
     end
 
     def initialize(variables={})
@@ -25,7 +24,7 @@ class GLOBAL_SCOPE
         name.each do |part|
             val = scope.variables[part]
             unless val
-                error "No such variable #{part}"
+                return nil
             end
             case val.value
             when InstantiatedObj
