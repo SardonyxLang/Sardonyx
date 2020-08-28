@@ -14,6 +14,18 @@ def codify(val)
     end
 end
 
+def stringify(val)
+    if val.value.fields["__as_string"]
+        if val.value.fields["__as_string"].respond_to? :fields
+            (val.value.fields["__as_string"].fields["__call"].call [], val.scope).internal
+        else
+            (val.value.fields["__as_string"]).call.internal
+        end
+    else
+        val.value.to_s
+    end
+end
+
 class VM
     attr_accessor :bc_io
     
@@ -26,14 +38,6 @@ class VM
             return (val.value.fields["__as_bool"].call).internal
         else
             return true
-        end
-    end
-
-    def stringify(val)
-        if val.value.fields["__as_string"]
-            (call val.value.fields["__as_string"], [], val.scope).internal
-        else
-            val.value.to_s
         end
     end
     
