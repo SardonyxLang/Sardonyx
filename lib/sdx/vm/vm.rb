@@ -3,11 +3,11 @@ require 'sdx/vm/datatypes'
 require 'sdx/vm/scope'
 
 def codify(val)
-    if val.value.fields["__as_code_string"]
-        if val.value.fields["__as_code_string"].respond_to? :call
-            (val.value.fields["__as_code_string"].call).internal
+    if val.value.fields["__as_code_str"]
+        if val.value.fields["__as_code_str"].respond_to? :call
+            (val.value.fields["__as_code_str"].call).internal
         else
-            (val.value.fields["__as_code_string"].fields["__call"].call [], val.scope).internal
+            (val.value.fields["__as_code_str"].fields["__call"].call [], val.scope).internal
         end
     else
         val.value.pretty_inspect
@@ -15,15 +15,20 @@ def codify(val)
 end
 
 def stringify(val)
-    if val.value.fields["__as_string"]
-        if val.value.fields["__as_string"].respond_to? :fields
-            (val.value.fields["__as_string"].fields["__call"].call [], val.scope).internal
+    if val.value.fields["__as_str"]
+        if val.value.fields["__as_str"].respond_to? :fields
+            (val.value.fields["__as_str"].fields["__call"].call [], val.scope).internal
         else
-            (val.value.fields["__as_string"]).call.internal
+            (val.value.fields["__as_str"]).call.internal
         end
     else
         val.value.to_s
     end
+end
+
+def error(msg)
+    puts "\x1b[0;31mError in VM: #{msg}\x1b[0;0m"
+    State::state = :error
 end
 
 class VM
@@ -112,6 +117,62 @@ class VM
         @global.add_fn "__rb_call", (Variable.new (NativeFn.new 2, (Proc.new do |name, args|
             args = (codify args)[1..-2]
             from_rb eval "#{name.value.internal}(#{args})"
+        end)), :fn, @global)
+        @global.add_fn "__is_int", (Variable.new (NativeFn.new 1, (Proc.new do |n|
+            case n.value
+            when Int
+                to_var (Bool.new true)
+            else
+                to_var (Bool.new false)
+            end
+        end)), :fn, @global)
+        @global.add_fn "__is_num", (Variable.new (NativeFn.new 1, (Proc.new do |n|
+            case n.value
+            when Num
+                to_var (Bool.new true)
+            else
+                to_var (Bool.new false)
+            end
+        end)), :fn, @global)
+        @global.add_fn "__is_str", (Variable.new (NativeFn.new 1, (Proc.new do |n|
+            case n.value
+            when Str
+                to_var (Bool.new true)
+            else
+                to_var (Bool.new false)
+            end
+        end)), :fn, @global)
+        @global.add_fn "__is_list", (Variable.new (NativeFn.new 1, (Proc.new do |n|
+            case n.value
+            when List
+                to_var (Bool.new true)
+            else
+                to_var (Bool.new false)
+            end
+        end)), :fn, @global)
+        @global.add_fn "__is_bool", (Variable.new (NativeFn.new 1, (Proc.new do |n|
+            case n.value
+            when Bool
+                to_var (Bool.new true)
+            else
+                to_var (Bool.new false)
+            end
+        end)), :fn, @global)
+        @global.add_fn "__is_list", (Variable.new (NativeFn.new 1, (Proc.new do |n|
+            case n.value
+            when List
+                to_var (Bool.new true)
+            else
+                to_var (Bool.new false)
+            end
+        end)), :fn, @global)
+        @global.add_fn "__is_nil", (Variable.new (NativeFn.new 1, (Proc.new do |n|
+            case n.value
+            when Nil
+                to_var (Bool.new true)
+            else
+                to_var (Bool.new false)
+            end
         end)), :fn, @global)
         @stack = []
         @byte_pos = 0
@@ -275,7 +336,7 @@ class VM
                     push_to_stack Variable.new (Int.new val.to_i), :int, @global
                 when :num
                     val = get_string
-                    push_to_stack Variable.new (Num.new val.to_f), :num, @global
+                    push_to_stack Variable.new (Num.new val), :num, @global
                 when :str
                     val = get_string
                     push_to_stack Variable.new (Str.new val), :str, @global

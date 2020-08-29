@@ -1,4 +1,5 @@
 require "stringio"
+require "bigdecimal"
 
 class DataType 
     attr_reader :internal
@@ -51,10 +52,10 @@ class Bool < DataType
             @internal = false
         end
         @fields = {
-            "__as_string" => (NativeFn.new 0, (Proc.new do
+            "__as_str" => (NativeFn.new 0, (Proc.new do
                 as_string
             end)),
-            "__as_code_string" => (NativeFn.new 0, (Proc.new do
+            "__as_code_str" => (NativeFn.new 0, (Proc.new do
                 as_string
             end)),
             "__eq" => (NativeFnInternal.new (lambda do |other|
@@ -77,10 +78,10 @@ class Int < DataType
             @internal = val
         end
         @fields = {
-            "__as_string" => (NativeFnInternal.new (Proc.new do
+            "__as_str" => (NativeFnInternal.new (Proc.new do
                 as_string
             end)),
-            "__as_code_string" => (NativeFnInternal.new (Proc.new do
+            "__as_code_str" => (NativeFnInternal.new (Proc.new do
                 as_string
             end)),
             "__as_bool" => (NativeFnInternal.new (Proc.new do
@@ -134,42 +135,112 @@ class Int < DataType
     end
 
     def add(other)
+        case other
+        when Int
+        when Num
+        else
+            error "Cannot use Int + on #{other.class}"
+            return nil
+        end
         Int.new @internal + other.internal
     end
 
     def sub(other)
+        case other
+        when Int
+        when Num
+        else
+            error "Cannot use Int - on #{other.class}"
+            return nil
+        end
         Int.new @internal - other.internal
     end
 
     def mul(other)
+        case other
+        when Int
+        when Num
+        else
+            error "Cannot use Int * on #{other.class}"
+            return nil
+        end
         Int.new @internal * other.internal
     end
 
     def div(other)
-        Int.new @internal / other.internal
+        case other
+        when Int
+        when Num
+        else
+            error "Cannot use Int / on #{other.class}"
+            return nil
+        end
+        Num.new (@internal / (other.internal / 1.0)).to_s
     end
 
     def mod(other)
+        case other
+        when Int
+        when Num
+        else
+            error "Cannot use Int % on #{other.class}"
+            return nil
+        end
         Int.new @internal % other.internal
     end
 
     def pow(other)
+        case other
+        when Int
+        when Num
+        else
+            error "Cannot use Int ^ on #{other.class}"
+            return nil
+        end
         Int.new @internal ** other.internal
     end
 
     def lt(other)
+        case other
+        when Int
+        when Num
+        else
+            error "Cannot use Int < on #{other.class}"
+            return nil
+        end
         Bool.new @internal < other.internal
     end
 
     def gt(other)
+        case other
+        when Int
+        when Num
+        else
+            error "Cannot use Int > on #{other.class}"
+            return nil
+        end
         Bool.new @internal > other.internal
     end
 
     def le(other)
+        case other
+        when Int
+        when Num
+        else
+            error "Cannot use Int <= on #{other.class}"
+            return nil
+        end
         Bool.new @internal <= other.internal
     end
 
     def ge(other)
+        case other
+        when Int
+        when Num
+        else
+            error "Cannot use Int >= on #{other.class}"
+            return nil
+        end
         Bool.new @internal >= other.internal
     end
 end
@@ -180,10 +251,10 @@ class Str < DataType
             @internal = val
         end
         @fields = {
-            "__as_string" => (NativeFnInternal.new (Proc.new do 
+            "__as_str" => (NativeFnInternal.new (Proc.new do 
                 as_string
             end)),
-            "__as_code_string" => (NativeFnInternal.new (Proc.new do
+            "__as_code_str" => (NativeFnInternal.new (Proc.new do
                 as_code_string
             end)),
             "__add" => (NativeFnInternal.new (Proc.new do |other|
@@ -210,10 +281,22 @@ class Str < DataType
     end
 
     def add(other)
+        case other
+        when Str
+        else
+            error "Cannot use Str + on #{other.class}"
+            return nil
+        end
         Str.new @internal + other.internal
     end
 
     def mul(other)
+        case other
+        when Int
+        else
+            error "Cannot use Int * on #{other.class}"
+            return nil
+        end
         Str.new @internal * other.internal
     end
 end
@@ -221,13 +304,13 @@ end
 class Num < DataType
     def initialize(val=nil)
         if val != nil
-            @internal = val
+            @internal = BigDecimal val
         end
         @fields = {
-            "__as_string" => (NativeFnInternal.new (Proc.new do
+            "__as_str" => (NativeFnInternal.new (Proc.new do
                 as_string
             end)),
-            "__as_code_string" => (NativeFnInternal.new (Proc.new do
+            "__as_code_str" => (NativeFnInternal.new (Proc.new do
                 as_string
             end)),
             "__as_bool" => (NativeFnInternal.new (Proc.new do
@@ -273,7 +356,7 @@ class Num < DataType
     end
 
     def as_string
-        Str.new @internal.to_s
+        Str.new (@internal.to_s "F")
     end
 
     def as_bool
@@ -281,42 +364,112 @@ class Num < DataType
     end
 
     def add(other)
+        case other
+        when Num
+        when Int
+        else
+            error "Cannot use Num + on #{other.class}"
+            return nil
+        end
         Num.new @internal + other.internal
     end
 
     def sub(other)
+        case other
+        when Num
+        when Int
+        else
+            error "Cannot use Num - on #{other.class}"
+            return nil
+        end
         Num.new @internal - other.internal
     end
 
     def mul(other)
+        case other
+        when Num
+        when Int
+        else
+            error "Cannot use Num * on #{other.class}"
+            return nil
+        end
         Num.new @internal * other.internal
     end
 
     def div(other)
+        case other
+        when Num
+        when Int
+        else
+            error "Cannot use Num / on #{other.class}"
+            return nil
+        end
         Num.new @internal / other.internal
     end
 
     def mod(other)
+        case other
+        when Num
+        when Int
+        else
+            error "Cannot use Num % on #{other.class}"
+            return nil
+        end
         Num.new @internal % other.internal
     end
 
     def pow(other)
+        case other
+        when Num
+        when Int
+        else
+            error "Cannot use Num ^ on #{other.class}"
+            return nil
+        end
         Num.new @internal ** other.internal
     end
 
     def lt(other)
+        case other
+        when Num
+        when Int
+        else
+            error "Cannot use Num < on #{other.class}"
+            return nil
+        end
         Bool.new @internal < other.internal
     end
 
     def gt(other)
+        case other
+        when Num
+        when Int
+        else
+            error "Cannot use Num > on #{other.class}"
+            return nil
+        end
         Bool.new @internal > other.internal
     end
 
     def le(other)
+        case other
+        when Num
+        when Int
+        else
+            error "Cannot use Num <= on #{other.class}"
+            return nil
+        end
         Bool.new @internal <= other.internal
     end
 
     def ge(other)
+        case other
+        when Num
+        when Int
+        else
+            error "Cannot use Num >= on #{other.class}"
+            return nil
+        end
         Bool.new @internal >= other.internal
     end
 end
@@ -327,6 +480,9 @@ class Nil < DataType
         @fields = {
             "__as_bool" => (NativeFnInternal.new (Proc.new do
                 Bool.new false
+            end)),
+            "__as_str" => (NativeFnInternal.new (Proc.new do
+                Str.new "nil"
             end)),
             "__eq" => (NativeFnInternal.new (lambda do |other|
                 Bool.new @internal == other[0].internal
@@ -344,10 +500,10 @@ class List < DataType
         @scope = scope
         @pos = 0
         @fields = {
-            "__as_string" => (NativeFnInternal.new (Proc.new do 
+            "__as_str" => (NativeFnInternal.new (Proc.new do 
                 as_string
             end)),
-            "__as_code_string" => (NativeFnInternal.new (Proc.new do
+            "__as_code_str" => (NativeFnInternal.new (Proc.new do
                 as_code_string
             end)),
             "__reset" => (NativeFnInternal.new (Proc.new do 
@@ -414,6 +570,12 @@ class List < DataType
     end
 
     def mul(other)
+        case other
+        when Int
+        else
+            error "Cannot use List * on #{other.class}"
+            return nil
+        end
         return List.new @internal * other.internal
     end
 end
