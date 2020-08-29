@@ -23,6 +23,7 @@ module Parser
             /\Aobject/ => :object,
             /\Anew/ => :new,
             /\Arequire/ => :require,
+            /\Areturn/ => :return,
             /\A(true|false)/ => :bool,
             /\A-?[0-9]+\.[0-9]+/ => :float,
             /\A-?[0-9]+/ => :number,
@@ -674,11 +675,24 @@ Invalid code at #{line}:#{col}
             end
             [ (Node.new :require, tokens[0][0][1..-2], []), 2 ]
         end
+
+        def self.parse_return(tokens)
+            unless self.expect tokens, :return
+                return nil
+            end
+            tokens = tokens[1..-1]
+            res = self.parse_expr tokens
+            unless res
+                return nil
+            end
+            [ (Node.new :return, res[0], []), res[1] ]
+        end
             
         def self.parse_expr(tokens)
             (self.parse_op tokens)  || 
             (self.parse_call tokens) || 
             (self.parse_require tokens) || 
+            (self.parse_return tokens) ||
             (self.parse_new tokens) || 
             (self.parse_object tokens) || 
             (self.parse_fn tokens) || 
@@ -706,6 +720,7 @@ Invalid code at #{line}:#{col}
                         unless code
                             error "Cannot find file #{e[0].value}.sdx anywhere in path"
                             State::state = :error
+                            return nil
                         end
                         tokens = tokens[e[1]..-1]
                         lexed, _ = Lexer.lex code

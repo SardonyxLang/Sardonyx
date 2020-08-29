@@ -197,6 +197,9 @@ module Compiler
                     bc += self.encode_node item
                 end
                 bc += "\x21\x2c#{node.children.size}\x18"
+            when :return
+                bc += self.encode_node node.value
+                bc += "\x16"
             else
                 nil
             end
