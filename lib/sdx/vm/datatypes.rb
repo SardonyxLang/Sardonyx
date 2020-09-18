@@ -304,6 +304,12 @@ end
 class Num < DataType
     def initialize(val=nil)
         if val != nil
+            case val
+            when String
+                unless val.include? ".0"
+                    val += ".0"
+                end
+            end
             @internal = BigDecimal val
         end
         @fields = {

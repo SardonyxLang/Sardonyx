@@ -25,8 +25,8 @@ module Parser
             /\Arequire/ => :require,
             /\Areturn/ => :return,
             /\A(true|false)/ => :bool,
-            /\A-?[0-9]+\.[0-9]+/ => :float,
-            /\A-?[0-9]+/ => :number,
+            /\A[0-9]+\.[0-9]+/ => :float,
+            /\A[0-9]+/ => :number,
             /\A(\+|-)/ => :l1op,
             /\A(\/|\*|%|\^)/ => :l2op,
             /\A(<|>|<=|>=|==|!=)/ => :l1op,
@@ -159,8 +159,14 @@ Invalid code at #{line}:#{col}
         end
 
         def self.parse_number(tokens)
+            negative = 0
+            if tokens[0][0] == "-"
+                tokens = tokens[1..-1]
+                negative = 1
+            end
+
             if self.expect tokens, :number
-                [ (Node.new :number, tokens[0][0], []), 1 ]
+                [ (Node.new :number, ("-" * negative) + tokens[0][0], []), negative + 1 ]
             else
                 nil
             end
@@ -175,8 +181,14 @@ Invalid code at #{line}:#{col}
         end
 
         def self.parse_float(tokens)
+            negative = 0
+            if tokens[0][0] == "-"
+                tokens = tokens[1..-1]
+                negative = 1
+            end
+
             if self.expect tokens, :float
-                [ (Node.new :float, tokens[0][0], []), 1 ]
+                [ (Node.new :float, ("-" * negative) + tokens[0][0], []), negative + 1 ]
             else
                 nil
             end
