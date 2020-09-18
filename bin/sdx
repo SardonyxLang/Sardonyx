@@ -22,7 +22,7 @@ if ARGV.size == 1
 else
     path = [(File.expand_path Dir.pwd), *(ENV.fetch("SDX_PATH", "").split ":")]
     vm = VM.new StringIO.new ""
-    puts "Sardonyx v0.3.6"
+    puts "Sardonyx v0.3.8"
     puts "Type :help for help, or :exit to exit"
     loop do
         begin

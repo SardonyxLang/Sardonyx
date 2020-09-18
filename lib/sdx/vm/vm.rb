@@ -504,16 +504,16 @@ class VM
                 end
             when :call
                 val = pop_from_stack
+                arity = get_string.to_i
                 if callable val
+                    if (arity val).internal != arity
+                        error "Wrong number of arguments: expected #{stringify to_var arity val}, got #{arity}"
+                    end
                     args = []
-                    (arity val).internal.times do
+                    arity.times do
                         break if State::state != :ok
                         this = pop_from_stack
-                        if !this
-                            error "Not enough arguments: expected #{val.value.fields["__arity"].internal}, got #{args.size}"
-                        else
-                            args << this
-                        end
+                        args << this
                     end
                     if State::state == :ok
                         scope = nil

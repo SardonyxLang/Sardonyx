@@ -48,7 +48,7 @@ module Compiler
                     bc += self.encode_node item
                 end
                 bc += self.encode_node node.value
-                bc += "\x02"
+                bc += "\x02#{node.children.size}\x18"
             when :new
                 node.children.each do |item|
                     bc += self.encode_node item
