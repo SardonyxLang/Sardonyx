@@ -1,8 +1,2 @@
-fn f() {
-    return 5
-    6
-}
-
-require "stdio"
-
-Stdio:writeln(f())
+res = dl_call("/home/sugarfi/Code/Sardonyx2/libsdxdl.o", "add", 7)
+print(res)

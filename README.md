@@ -1,2 +1,0 @@
-# Sardonyx
-The Sardonyx compiler.
