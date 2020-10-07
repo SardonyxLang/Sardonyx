@@ -1,5 +1,5 @@
 require "c/dlfcn"
-@[Link(ldflags: "#{__DIR__}/../bin/libsdxdl.so")]
+@[Link(ldflags: "-lncursesw -ldl #{__DIR__}/../bin/libsdxdl.so")]
 lib LibDL
     enum SDXId
         SDXInt

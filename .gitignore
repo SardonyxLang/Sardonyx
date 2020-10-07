@@ -1,4 +1,5 @@
 /lib
 /bin
+/cr
 shard.lock
 *.sdx
