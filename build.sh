@@ -35,5 +35,17 @@ then
     make sdx
     exit
 fi
+
+echo "Building with Docker..."
+if [ ! -d cr ]
+then
+    echo "Fetching modified Crystal standard library..."
+    if ! command -v git &> /dev/null
+    then
+        echo "Git not found. Abort."
+        exit 1
+    fi
+    git clone https://github.com/sugarfi/crystal.git cr
+fi
 docker build -t sdx .
 docker cp $(docker run -d sdx):/root/bin/sdx .
