@@ -354,7 +354,10 @@ module SDX
                         vm.run
                         return vm.stack[-1]?
                     end, @args.size, scope),
-                    "__arity" => SDXInt.new(@args.size, @scope)
+                    "__arity" => SDXInt.new(@args.size, @scope),
+                    "__as_str" => SDXNativeFn.new(Proc(Array(Value), Value?).new do |args|
+                        SDXStr.new "Fn<#{@internal.hash}>", @scope
+                    end, 1, scope)
                 } of String => Value
             end
         end
@@ -374,7 +377,10 @@ module SDX
                         vm.run
                         return vm.stack[-1]?
                     end, 1, scope),
-                    "__arity" => SDXInt.new(1, @scope)
+                    "__arity" => SDXInt.new(1, @scope),
+                    "__as_str" => SDXNativeFn.new(Proc(Array(Value), Value?).new do |args|
+                        SDXStr.new "Block<#{@internal.hash}>", @scope
+                    end, 1, scope)
                 } of String => Value
             end
         end
@@ -397,7 +403,10 @@ module SDX
                         vm.run
                         return SDXInstance.new vm.scope, @scope, @name
                     end, @args.size, scope),
-                    "__new_arity" => SDXInt.new(@args.size, @scope)
+                    "__new_arity" => SDXInt.new(@args.size, @scope),
+                    "__as_str" => SDXNativeFn.new(Proc(Array(Value), Value?).new do |args|
+                        SDXStr.new "Object<#{@internal.hash}>", @scope
+                    end, 1, scope)
                 } of String => Value
             end
         end

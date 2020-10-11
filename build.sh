@@ -37,7 +37,7 @@ then
 fi
 
 echo "Building with Docker..."
-if [ ! -d cr ]
+if ! [ -d cr ]
 then
     echo "Fetching modified Crystal standard library..."
     if ! command -v git &> /dev/null
@@ -48,4 +48,4 @@ then
     git clone https://github.com/sugarfi/crystal.git cr
 fi
 docker build -t sdx .
-docker cp $(docker run -d sdx):/root/bin/sdx .
+docker cp $(docker run -d sdx):/root/bin/sdx bin

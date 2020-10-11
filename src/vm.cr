@@ -53,6 +53,7 @@ module SDX
         def self.call(f : Datatypes::Value, args : Array(Datatypes::Value))
             unless f.fields["__call"]? && f.fields["__arity"]?
                 Error.vm_error "Cannot call #{Datatypes.base_typename f}"
+                return nil
             end
             case f.fields["__arity"]
             when Datatypes::SDXInt
@@ -80,6 +81,7 @@ module SDX
         def self.construct(f : Datatypes::Value, args : Array(Datatypes::Value))
             unless f.fields["__new"]? && f.fields["__new_arity"]?
                 Error.vm_error "Cannot construct #{Datatypes.base_typename f}"
+                return nil
             end
             case f.fields["__new_arity"]
             when Datatypes::SDXInt
