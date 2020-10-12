@@ -17,13 +17,13 @@ module SDX
 
         def self.backtrace
             @@callstack.reverse.each do |item|
-                puts "  \e[31mIn #{item}"
+                STDERR.puts "  \e[31mIn #{item}"
             end
-            print "\e[0m"
+            STDERR.print "\e[0m"
         end
 
         def self.error(type : String, msg : String)
-            puts "\e[31m#{type} error: #{msg}\e[0m"
+            STDERR.puts "\e[31m#{type} error: #{msg}\e[0m"
             self.backtrace
             unless @@no_exit
                 exit 1
@@ -52,6 +52,10 @@ module SDX
 
         def self.list_error(msg : String)
             self.error "List", msg
+        end
+
+        def self.cli_error(msg : String)
+            self.error "CLI", msg
         end
     end
 end

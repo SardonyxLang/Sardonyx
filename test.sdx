@@ -1,2 +1,0 @@
-res = dl_call("/home/sugarfi/Code/Sardonyx2/libsdxdl.o", "add", 7)
-print(res)
