@@ -47,5 +47,5 @@ then
     fi
     git clone https://github.com/sugarfi/crystal.git cr
 fi
-docker build -t sdx .
-docker cp $(docker run -d sdx):/root/bin/sdx bin
+docker build -t sugarfi/sdx:latest .
+docker cp $(docker run -d sugarfi/sdx):/root/bin/sdx bin
