@@ -4,9 +4,9 @@
 typedef enum {
     SDX_INT,
     SDX_STR,
-    SDXBool,
-    SDXNum,
-    SDXNil
+    SDX_BOOL,
+    SDX_NUM,
+    SDX_NIL
 } SDXId;
 
 typedef union {
