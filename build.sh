@@ -42,6 +42,7 @@ then
         echo "Shards must be version 0.12.1 or 0.11.1 to build. Abort."
         exit 1
     fi
+    cd cr/ && make libcrystal && cd ..
     export CRYSTAL_PATH="$(pwd)/cr/src:$(pwd)/lib" && make sdx
     exit
 fi
