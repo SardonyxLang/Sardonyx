@@ -127,7 +127,10 @@ module SDX
             else
               Error.type_error "Argument two of dl_call must be a string"
             end
-            name = args[0].internal.as String
+            name = Lookup.lookup_lib args[0].internal.as(String)
+            unless name
+              return nil
+            end
             l = Binding::Lib.new name
             sym = args[1].internal.as String
             arg = args[2]

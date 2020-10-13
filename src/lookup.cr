@@ -8,8 +8,24 @@ module SDX
       end
     end
 
+    def self.lookup_lib(path : String)
+      env = ENV.fetch("SDX_LIB_PATH", "").split(":")
+      env.concat ENV.fetch("LD_LIBRARY_PATH", "").split(":")
+      if File.exists? File.expand_path("#{path}.so")
+        File.expand_path("#{path}.so")
+      else
+        env.each do |part|
+          if File.exists? File.expand_path(File.join(part, "#{path}.so"))
+            return File.expand_path(File.join(part, "#{path}.so"))
+          end
+        end
+        Error.lookup_error "Could not find file #{File.basename path}.so anywhere"
+        return nil
+      end
+    end
+
     def self.lookup(path : String)
-      env = ENV["SDX_PATH"].split ":"
+      env = ENV.fetch("SDX_PATH", "").split(":")
       if File.exists? File.expand_path("#{path}.sdx")
         File.expand_path("#{path}.sdx")
       else
