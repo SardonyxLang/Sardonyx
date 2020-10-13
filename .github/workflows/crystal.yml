@@ -1,0 +1,24 @@
+name: Crystal CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    container:
+      image: crystallang/crystal
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install modified stdlib
+      run: git clone https://github.com/sugarfi/crystal.git cr
+    - name: Install dependencies
+      run: shards install
+    - name: Run tests
+      run: CRYSTAL_PATH="$(pwd)/cr:$(pwd)/lib" crystal spec
