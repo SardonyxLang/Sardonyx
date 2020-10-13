@@ -216,7 +216,9 @@ module SDX
       getter internal : String
 
       def initialize(internal : String, scope = {} of String => Value, name = "anonymous")
-        @internal = internal
+        @internal = internal.gsub("\\n", "\n").gsub("\\t", "\t").gsub("\\r", "\r").gsub /\\u[0-9a-fA-F]{4}/ do |match|
+          match[2..].to_i(16).chr
+        end
         @scope = scope
         @fields = {
           "__eq" => SDXNativeFn.new(Proc(Array(Value), Value?).new do |args|
