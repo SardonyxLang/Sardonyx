@@ -17,8 +17,8 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Install modified stdlib
-      run: git clone https://github.com/sugarfi/crystal.git cr && export CRYSTAL_PATH="$(pwd)/cr:$(pwd)/lib"
+      run: git clone https://github.com/sugarfi/crystal.git cr
     - name: Install dependencies
       run: shards install
     - name: Run tests
-      run: crystal spec
+      run: CRYSTAL_PATH="$(pwd)/cr:$(pwd)/lib" crystal spec
