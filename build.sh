@@ -2,6 +2,16 @@ if ! command -v docker &> /dev/null
 then
     echo "Docker not found, attempting to build with Make..."
     echo -e "\e[33mWARNING: building with Make produces binaries incompatible with other Glibc versions. Installing Docker to build with Musl is recommened.\e[0m"
+    if ! [ -d cr ]
+    then
+        echo "Fetching modified Crystal standard library..."
+        if ! command -v git &> /dev/null
+        then
+            echo "Git not found. Abort."
+            exit 1
+        fi
+        git clone https://github.com/sugarfi/crystal.git cr
+    fi
     if ! command -v make &> /dev/null
     then
         echo "Make not found. Abort."
