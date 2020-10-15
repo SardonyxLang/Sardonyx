@@ -7,12 +7,4 @@ authors:
 description: |
   The Sardonyx programming language version 1.0.0.
 
-dependencies:
-  readline:
-    github: crystal-lang/crystal-readline
-
-# development_dependencies:
-#   webmock:
-#     github: manastech/webmock.cr
-
-# license: MIT
+license: MIT

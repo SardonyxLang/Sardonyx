@@ -10,4 +10,4 @@ sdx: libsdxdl src/*.cr
 install: sdx
 	@echo Installing...
 	@mv bin/sdx /usr/bin
-	@mc ffi/sdx.h /usr/include
+	@mv ffi/sdx.h /usr/include

@@ -2,7 +2,6 @@ require "./parser"
 require "./compiler"
 require "./vm"
 require "./error"
-require "readline"
 require "option_parser"
 
 module SDX
@@ -26,7 +25,8 @@ module SDX
         Lookup.warn
         vm = VM.new IO::Memory.new ""
         loop do
-          code = Readline.readline "> "
+          print "> "
+          code = gets
           Error.no_exit = true
           case code
           when nil
